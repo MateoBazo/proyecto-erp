@@ -1,0 +1,35 @@
+# Servicio systemd para el backend (FastAPI/Uvicorn) del ERP Catastro.
+#
+# Instalación en el servidor Linux:
+#   1. Ajustar User=, WorkingDirectory= y ExecStart= abajo a las rutas reales
+#      del servidor (los valores de este archivo son placeholders de ejemplo).
+#   2. sudo cp erp-backend.service /etc/systemd/system/erp-backend.service
+#   3. sudo systemctl daemon-reload
+#   4. sudo systemctl enable erp-backend    # arranca solo en cada boot
+#   5. sudo systemctl start erp-backend
+#
+# Notas:
+#   - No usar --reload acá: --reload es solo para desarrollo (vigila archivos
+#     y reinicia en cada cambio), no aporta nada en producción y consume recursos.
+#   - Restart=always + RestartSec hacen que si el proceso muere (crash, el
+#     servidor se cae y lo prenden de nuevo, etc.) vuelva a levantarse solo.
+#   - WorkingDirectory apunta directo a backend/ para que Pydantic encuentre
+#     backend/.env sin necesitar --app-dir ni --env-file.
+
+[Unit]
+Description=ERP Catastro - Backend (FastAPI/Uvicorn)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/usr/src/conexionkeycloak/backend
+Environment=PATH=/usr/src/conexionkeycloak/venv/bin
+ExecStart=/usr/src/conexionkeycloak/venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8080
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

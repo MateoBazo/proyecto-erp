@@ -1,0 +1,11 @@
+{
+  "name": "erp-catastro",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "concurrently -n BACKEND,FRONTEND -c blue,green \"python -m uvicorn app.main:app --reload --port 8080 --app-dir backend --env-file backend/.env\" \"npm run dev --prefix Frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

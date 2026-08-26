@@ -1,0 +1,35 @@
+# Servicio systemd para el frontend (build de producción de Vite, servido
+# con "serve") del ERP Catastro.
+#
+# Instalación en el servidor Linux:
+#   1. Generar el build de producción una vez (y cada vez que se despliegue
+#      código nuevo): cd Frontend && npm install && npm run build
+#   2. Ajustar User=, WorkingDirectory= y ExecStart= abajo a las rutas reales
+#      del servidor (los valores de este archivo son placeholders de ejemplo).
+#   3. sudo cp erp-frontend.service /etc/systemd/system/erp-frontend.service
+#   4. sudo systemctl daemon-reload
+#   5. sudo systemctl enable erp-frontend    # arranca solo en cada boot
+#   6. sudo systemctl start erp-frontend
+#
+# Nota: si el equipo de infraestructura de la alcaldía ya tiene un nginx (u
+# otro reverse proxy) corriendo en el servidor, es preferible que ese nginx
+# sirva directamente Frontend/dist/ como archivos estáticos en vez de este
+# servicio — este systemd unit es la alternativa autocontenida para cuando
+# no hay nginx todavía. Confirmar con el equipo de infraestructura antes de
+# decidir cuál usar.
+
+[Unit]
+Description=ERP Catastro - Frontend (build de producción servido con "serve")
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/usr/src/conexionkeycloak/Frontend
+ExecStart=/usr/bin/npx serve -s dist -l 3000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

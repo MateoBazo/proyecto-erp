@@ -1,0 +1,52 @@
+import { LogOut, Menu } from 'lucide-react'
+import escudoGamc from '@/assets/escudo-gamc.png'
+import { Button } from '@/shared/ui'
+import { ENV } from '@/core/config/env.config'
+
+export function Header({ onLogout, onToggleSidebar }) {
+  return (
+    <header className="sticky top-0 z-10 border-b border-accent-400/40 bg-accent-300/95 shadow-sm px-4 py-3">
+      <div className="mx-auto flex max-w-4xl items-center justify-between">
+        <div className="flex items-center gap-3">
+          {onToggleSidebar && (
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              aria-label="Mostrar u ocultar el menú"
+              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-brand-600/30 bg-white/70 text-brand-600 transition-colors duration-200 hover:border-brand-600 hover:text-brand-800"
+            >
+              <Menu className="h-[18px] w-[18px]" />
+            </button>
+          )}
+
+          <img
+            src={escudoGamc}
+            alt="Escudo del Gobierno Autónomo Municipal de Cochabamba"
+            className="h-9 w-auto shrink-0"
+          />
+          <div>
+            <span className="text-[11px] font-bold tracking-wider text-brand-600 uppercase">
+              {ENV.ORGANIZATION}
+            </span>
+            <h1 className="text-sm font-bold text-brand-900 sm:text-base">
+              {ENV.APP_NAME}
+            </h1>
+          </div>
+        </div>
+
+        {onLogout && (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={onLogout}
+            icon={LogOut}
+          >
+            Cerrar sesión
+          </Button>
+        )}
+      </div>
+    </header>
+  )
+}
+
+export default Header
