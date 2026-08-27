@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import {
   FileUp, Trash2, XCircle, FileSpreadsheet,
-  Save, ScanLine, ZoomIn, ZoomOut, RotateCcw,
+  Save, ScanLine, ZoomIn, ZoomOut,
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { toast } from 'react-toastify'
@@ -23,9 +23,10 @@ function toTerrenosPayload(terrenos) {
   }
 }
 
-const ZOOM_MIN = 0.5
-const ZOOM_MAX = 3
-const ZOOM_STEP = 0.25
+const ZOOM_MIN = 1
+const ZOOM_MAX = 4
+const ZOOM_STEP = 0.5
+const ZOOM_BASE_PX = 500
 
 function descargarBlob(blob, nombreArchivo) {
   const url = window.URL.createObjectURL(blob)
@@ -48,6 +49,7 @@ export default function CapturaPage() {
   const [imageSrc, setImageSrc] = useState(null)
   const [crop, setCrop] = useState()
   const [completedCrop, setCompletedCrop] = useState(null)
+  const [zoom, setZoom] = useState(ZOOM_MIN)
   const imgRef = useRef(null)
   const viewerRef = useRef(null)
   const [zoom, setZoom] = useState(1)
@@ -146,8 +148,7 @@ export default function CapturaPage() {
       setColumnTypes({})
       setNewRowIds([])
       setLastAppendCount(0)
-      setZoom(1)
-      setBaseWidth(null)
+      setZoom(ZOOM_MIN)
       toast.info('Imagen cargada correctamente.')
     } else {
       toast.error('Por favor, sube un archivo de imagen válido (JPG, PNG).')
@@ -354,6 +355,7 @@ export default function CapturaPage() {
     setPendingTerrains((p) => [...p, data])
     setImageSrc(null); setResults([]); setSelectedFile(null); setCrop(undefined); setColumnTypes({})
     setNewRowIds([])
+    setZoom(ZOOM_MIN)
     toast.success(`Polígono añadido a la capa. Total: ${pendingTerrains.length + 1}`)
   }
 
@@ -458,7 +460,36 @@ export default function CapturaPage() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
         <Card glass={false} className="xl:col-span-5">
           <div className="mb-4 flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
-            <span className="text-slate-400">Visor Documental</span>
+            <div className="flex items-center gap-4">
+              <span className="text-slate-400">Visor Documental</span>
+              {imageSrc && (
+                <div className="flex items-center gap-1.5 normal-case">
+                  <button
+                    onClick={() => setZoom((z) => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)))}
+                    disabled={zoom <= ZOOM_MIN}
+                    title="Alejar"
+                    className="rounded-lg p-1 text-slate-400 transition-colors hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    <ZoomOut size={14} />
+                  </button>
+                  <button
+                    onClick={() => setZoom(ZOOM_MIN)}
+                    title="Restablecer zoom"
+                    className="w-9 text-center text-[10px] font-black text-slate-400 hover:text-slate-700"
+                  >
+                    {Math.round(zoom * 100)}%
+                  </button>
+                  <button
+                    onClick={() => setZoom((z) => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)))}
+                    disabled={zoom >= ZOOM_MAX}
+                    title="Acercar"
+                    className="rounded-lg p-1 text-slate-400 transition-colors hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    <ZoomIn size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="flex items-center gap-4">
               {imageSrc && (
@@ -510,8 +541,7 @@ export default function CapturaPage() {
                     setCrop(undefined)
                     setColumnTypes({})
                     setNewRowIds([])
-                    setZoom(1)
-                    setBaseWidth(null)
+                    setZoom(ZOOM_MIN)
                   }}
                   className="flex items-center gap-1.5 text-state-danger transition-colors hover:text-state-magenta"
                 >
@@ -524,36 +554,24 @@ export default function CapturaPage() {
           <div
             ref={viewerRef}
             className={cn(
-              'flex min-h-[450px] max-h-[500px] flex-col rounded-2xl border-2 transition-all duration-200 ease-in-out',
-              imageSrc ? 'overflow-auto border-slate-200 bg-slate-50/20' :
-                isDragging ? 'items-center justify-center overflow-hidden scale-[1.01] border-dashed border-accent-500 bg-accent-50' : 'items-center justify-center overflow-hidden border-dashed border-slate-300 bg-slate-50/20 hover:bg-slate-50'
+              'flex min-h-[450px] flex-col rounded-2xl border-2 transition-all duration-200 ease-in-out',
+              imageSrc ? 'max-h-[500px] items-start justify-start overflow-auto border-slate-200 bg-slate-50/20' :
+                isDragging ? 'scale-[1.01] items-center justify-center overflow-hidden border-dashed border-accent-500 bg-accent-50' : 'items-center justify-center overflow-hidden border-dashed border-slate-300 bg-slate-50/20 hover:bg-slate-50'
             )}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
             {imageSrc ? (
-              <div className="m-auto">
-                <ReactCrop className="zoomable-crop" crop={crop} onChange={(c) => setCrop(c)} onComplete={(c) => setCompletedCrop(c)}>
-                  <img
-                    ref={imgRef}
-                    src={imageSrc}
-                    className="cursor-crosshair"
-                    style={
-                      baseWidth
-                        ? { width: `${baseWidth * zoom}px`, height: 'auto' }
-                        : { maxWidth: '100%', maxHeight: 500, width: 'auto', height: 'auto' }
-                    }
-                    onLoad={(e) => {
-                      const img = e.currentTarget
-                      imgRef.current = img
-                      const containerW = viewerRef.current?.clientWidth || img.naturalWidth
-                      const fitScale = Math.min(containerW / img.naturalWidth, 500 / img.naturalHeight, 1)
-                      setBaseWidth(img.naturalWidth * fitScale)
-                    }}
-                  />
-                </ReactCrop>
-              </div>
+              <ReactCrop crop={crop} onChange={(c) => setCrop(c)} onComplete={(c) => setCompletedCrop(c)} style={{ maxWidth: 'none' }}>
+                <img
+                  ref={imgRef}
+                  src={imageSrc}
+                  className="w-auto cursor-crosshair"
+                  style={{ height: `${zoom * ZOOM_BASE_PX}px`, maxWidth: 'none', maxHeight: 'none' }}
+                  onLoad={(e) => (imgRef.current = e.currentTarget)}
+                />
+              </ReactCrop>
             ) : (
               <div className="pointer-events-none p-10 text-center">
                 <FileSpreadsheet size={48} className={cn('mx-auto mb-4 transition-colors', isDragging ? 'text-accent-500' : 'text-slate-200')} />

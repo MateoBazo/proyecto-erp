@@ -35,5 +35,5 @@ class PrivateProfileResponse(BaseModel):
     email: str
     roles: List[str] = []
     client_id: Optional[str] = None
-    id_usuario: Optional[int] = None
+    id_usuario: Optional[str] = None
     permisos: List[str] = []

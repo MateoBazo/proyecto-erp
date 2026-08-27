@@ -37,7 +37,7 @@ def login(
     Endpoint de Autenticación compatible con Dominio Institucional y Credenciales Directas.
     - Si se envía `domain`: Valida el dominio institucional con Keycloak.
     - Si se envía `username` y `password`: Valida credenciales directas contra Keycloak
-      y guarda/sincroniza automáticamente al usuario en la base de datos (tabla 'usuarios').
+      y garantiza que el usuario exista en la tabla 'usuario' (sin asignar roles).
     """
     if payload.domain:
         result = domain_use_case.execute(DomainLoginInputDTO(domain=payload.domain))
@@ -55,10 +55,14 @@ def login(
             )
         )
 
-        # Sincronizar y persistir automáticamente en la tabla 'usuarios'
+        # Garantizar que el usuario exista en 'usuario' (vinculado por keycloak_sub)
         try:
             profile = verify_use_case.execute(result.access_token)
-            sync_rbac.execute(username=profile.username, keycloak_roles=profile.roles)
+            sync_rbac.execute(
+                keycloak_sub=profile.sub,
+                username=profile.username,
+                correo=profile.email,
+            )
         except Exception as exc:
             logger.warning(f"Aviso al guardar usuario en base de datos: {exc}")
 
