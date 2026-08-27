@@ -145,6 +145,43 @@ El client de Keycloak está actualmente registrado en el **realm `master`**. Ese
 - Migraciones con Alembic, prefijadas por dominio. Seed data en scripts idempotentes, separados de las migraciones estructurales.
 - Índices en toda FK y en columnas de filtro frecuente (`activo`, `keycloak_id`, etc.).
 
+**Cómo incorporar cambios de esquema del equipo de base de datos:** la base manda, el
+backend se adapta — nunca al revés. Cuando el equipo de base de datos agregue o cambie
+algo: (1) pedir el `.sql` actualizado (o generarlo con `pg_dump --schema-only`) y
+mantenerlo versionado en el repo; (2) por cada tabla nueva, agregar la clase ORM
+correspondiente en el `models.py` del dominio dueño, reflejando exactamente nombre de
+tabla, columnas, tipos y FKs — nunca al revés; (3) ojo con **columnas nuevas en una
+tabla que ya existía**: `Base.metadata.create_all()` nunca hace `ALTER TABLE`, así que un
+modelo desactualizado no avisa de nada hasta que el código intenta usar esa columna —
+preguntar explícitamente si el cambio fue tabla nueva o columna en una existente; (4)
+probarlo recreando la base local desde cero con el `.sql` actualizado antes de asumir que
+quedó bien; (5) no modelar en `domain/entities/` una tabla nueva hasta que algún caso de
+uso real la necesite (§10 — no inventar).
+
+**Estado actual (2026-08-26):** el esquema real de `seguridad` — creado con SQL puro por
+el equipo de base de datos, ver `ecosistema_seguridad_backup.sql` en la raíz del repo —
+todavía no sigue varias de las reglas de arriba, y el backend fue adaptado a esa realidad
+(no al revés; no se reescribió el esquema para que calce con el ORM). Concretamente:
+todas las tablas (`sistema`, `subsistema`, `recurso`, `usuario`, `area`, `rol_interno`,
+`usuario_rol_area`, `permiso`, `rol_permiso`, `auditoria_acceso`, `auditoria_geoocr`)
+viven en el schema `public`, no en un schema `seguridad` separado; la PK de cada tabla es
+una columna genérica `id` (UUID vía `gen_random_uuid()`), no `id_<entidad>`; y ninguna
+tabla tiene todavía `fecha_creacion`/`fecha_actualizacion`. Es deuda técnica pendiente de
+conversar con el equipo de base de datos — no asumir que ya está resuelta ni volver a
+escribir el esquema por tu cuenta para "corregirlo" sin acordarlo primero.
+
+Lo que sí se respeta en la base real: `usuario.keycloak_sub` es único y es el vínculo con
+`JWT.sub` (aunque se llame `keycloak_sub`, no `keycloak_id` como dice el nombre de arriba);
+y `rol_interno` correctamente no tiene ninguna columna de Keycloak. La asignación de un rol
+a un usuario siempre pasa por `usuario_rol_area` (rol + área juntas — no existe una tabla
+usuario↔rol simple): un usuario nuevo se crea sin ninguna fila ahí ("sin roles por
+defecto", Sección 5), y agregarle rol + área es todavía un paso manual sin pantalla propia
+(ver Sección 10). Tampoco hay Alembic todavía — el único mecanismo de sincronización de
+esquema del lado del backend es `Base.metadata.create_all()`, que ahora es inofensivo
+porque los modelos ORM (`domains/seguridad/infrastructure/models.py`) reflejan fielmente
+los nombres y tipos reales; si alguna vez deja de coincidir, ese `create_all()` vuelve a
+ser peligroso (crea tablas "huérfanas" con nombres distintos en vez de avisar del desfase).
+
 ---
 
 ## 7. Comunicación entre módulos/dominios
@@ -187,5 +224,18 @@ El client de Keycloak está actualmente registrado en el **realm `master`**. Ese
 - Catálogo completo de acciones por módulo.
 - Naturaleza exacta de la integración posterior con Active Directory / el ERP de otro equipo.
 - Entorno de despliegue final (on-premise vs. cloud).
+- Si la jerarquía `sistema` → `subsistema` → `recurso` de la base real de `seguridad`
+  corresponde 1:1 al concepto de "dominio" usado en el resto de este documento
+  (Catastro, Seguridad, Documentación...) — no asumir que son lo mismo.
+- Pantalla de administración para asignar rol + área a un usuario (`usuario_rol_area`).
+  Hoy no existe ninguna — un usuario autenticado por Keycloak queda sin permisos hasta
+  que alguien se lo asigne manualmente (directo en la base, por ahora).
+- Qué hacer con logins sin identidad individual (token sin `sub` — hoy pasa con las
+  credenciales de `admin-cli`/realm `master` usadas para pruebas, o con el flujo de
+  "dominio institucional"). Por ahora todos comparten un único usuario `Institucional`
+  en la base (`INSTITUTIONAL_SUB_SENTINEL` en `sync_user_rbac_use_case.py`), como hacía
+  la versión anterior del backend — pero eso implica que ninguna acción bajo ese modo se
+  puede auditar por persona. Confirmar con el equipo si esto alcanza para producción o si
+  hace falta que cada persona tenga su propio usuario real en un realm de Keycloak.
 
 Cuando el código toque algo de esta lista, confirmar con negocio/arquitectura antes de asumir — no completar el vacío con una suposición.
