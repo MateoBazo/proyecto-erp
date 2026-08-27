@@ -101,22 +101,28 @@ class TestUseCases(unittest.TestCase):
             use_case.execute("")
 
     def test_sync_user_rbac_use_case(self):
-        # Arrange
-        self.mock_user_repo.sync_keycloak_user.return_value = UserEntity(
-            id_usuario=1,
-            nombre="carlos",
+        # Arrange: ahora se identifica al usuario por keycloak_sub (JWT.sub), no por
+        # nombre, y no se le asignan roles desde Keycloak (CLAUDE.md §5).
+        self.mock_user_repo.ensure_user_exists.return_value = UserEntity(
+            id_usuario="11111111-1111-1111-1111-111111111111",
+            username="carlos",
+            keycloak_sub="kc-sub-carlos",
         )
-        self.mock_user_repo.get_user_permissions.return_value = ["EDIT_LAYERS", "VIEW_MAPS"]
+        self.mock_user_repo.get_user_permissions.return_value = ["mapas.ver", "capas.editar"]
         use_case = SyncUserRbacUseCase(user_repository=self.mock_user_repo)
 
         # Act
-        user_entity, permissions = use_case.execute("carlos", ["gis_editor"])
+        user_entity, permissions = use_case.execute(
+            keycloak_sub="kc-sub-carlos", username="carlos", correo="carlos@gamc.gob.bo"
+        )
 
         # Assert
-        self.assertEqual(user_entity.id_usuario, 1)
-        self.assertEqual(permissions, ["EDIT_LAYERS", "VIEW_MAPS"])
-        self.mock_user_repo.sync_keycloak_user.assert_called_once_with("carlos", ["gis_editor"])
-        self.mock_user_repo.get_user_permissions.assert_called_once_with("carlos")
+        self.assertEqual(user_entity.username, "carlos")
+        self.assertEqual(permissions, ["mapas.ver", "capas.editar"])
+        self.mock_user_repo.ensure_user_exists.assert_called_once_with(
+            keycloak_sub="kc-sub-carlos", username="carlos", correo="carlos@gamc.gob.bo"
+        )
+        self.mock_user_repo.get_user_permissions.assert_called_once_with("kc-sub-carlos")
 
 
 if __name__ == "__main__":

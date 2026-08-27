@@ -52,17 +52,17 @@ def private_route(
 ):
     """
     Endpoint protegido: Requiere un token Bearer válido emitido por Keycloak.
-    Valida el token, sincroniza al usuario con la base de datos PostgreSQL y
-    retorna datos de identidad, roles de Keycloak y permisos locales RBAC.
+    Valida el token, garantiza que el usuario exista en PostgreSQL (tabla 'usuario') y
+    retorna datos de identidad, roles de Keycloak y permisos locales RBAC ya asignados.
     """
     id_usuario = None
     permisos = []
 
     try:
-        # Sincronizar con PostgreSQL y obtener permisos
         user_entity, permisos = sync_rbac.execute(
+            keycloak_sub=current_user.sub,
             username=current_user.username,
-            keycloak_roles=current_user.roles,
+            correo=current_user.email,
         )
         id_usuario = user_entity.id_usuario
     except Exception as exc:

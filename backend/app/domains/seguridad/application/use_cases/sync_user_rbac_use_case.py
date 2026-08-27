@@ -1,23 +1,49 @@
-from typing import List, Tuple
-from app.domains.seguridad.domain.ports.user_repository_port import UserRepositoryPort
+from typing import List, Optional, Tuple
+
 from app.domains.seguridad.domain.entities.rbac import UserEntity
+from app.domains.seguridad.domain.ports.user_repository_port import UserRepositoryPort
+
+
+INSTITUTIONAL_SUB_SENTINEL = "institucional"
 
 
 class SyncUserRbacUseCase:
     """
-    Caso de uso: Sincroniza al usuario autenticado por Keycloak en la base de datos PostgreSQL
-    y recupera los permisos asignados en el modelo de seguridad RBAC.
+    Caso de uso: garantiza que el usuario autenticado por Keycloak tenga un registro en
+    PostgreSQL (vinculado por keycloak_sub) y recupera los permisos que ya le fueron
+    asignados en el modelo RBAC interno.
+
+    No asigna roles a partir de los roles de Keycloak: CLAUDE.md §5 es explícito en que
+    nunca se toma una decisión de autorización de negocio a partir del rol de Keycloak
+    directamente, y un usuario se crea "sin roles por defecto". Asignar rol + área es un
+    paso manual aparte (pantalla de administración todavía no construida, CLAUDE.md §10).
+
+    Caso "institucional": cuando el token no trae 'sub' (p. ej. un token de tipo
+    client_credentials, o de una cuenta de Keycloak que no representa a una persona —
+    como las credenciales de admin-cli/realm master usadas hoy para pruebas), no hay
+    identidad individual real que vincular. En vez de descartar el intento de sync, se
+    reutiliza siempre el mismo usuario 'Institucional' (vía INSTITUTIONAL_SUB_SENTINEL),
+    igual que hacía la versión anterior del backend. OJO: esto significa que ninguna
+    acción hecha bajo estas condiciones se puede auditar por persona — confirmar con el
+    equipo si esto es aceptable a largo plazo o si hace falta un usuario Keycloak real
+    por persona (ver CLAUDE.md §10).
     """
 
     def __init__(self, user_repository: UserRepositoryPort):
         self._user_repository = user_repository
 
-    def execute(self, username: str, keycloak_roles: List[str]) -> Tuple[UserEntity, List[str]]:
-        clean_name = (username or "").strip()
-        if not clean_name:
-            clean_name = "usuario_anonimo"
+    def execute(
+        self, keycloak_sub: str, username: str, correo: Optional[str] = None
+    ) -> Tuple[UserEntity, List[str]]:
+        clean_sub = (keycloak_sub or "").strip()
+        clean_username = (username or "").strip() or "usuario_anonimo"
 
-        user_entity = self._user_repository.sync_keycloak_user(clean_name, keycloak_roles)
-        permissions = self._user_repository.get_user_permissions(clean_name)
+        if not clean_sub:
+            clean_sub = INSTITUTIONAL_SUB_SENTINEL
+            clean_username = clean_username if clean_username != "usuario_anonimo" else "Institucional"
 
+        user_entity = self._user_repository.ensure_user_exists(
+            keycloak_sub=clean_sub, username=clean_username, correo=correo
+        )
+        permissions = self._user_repository.get_user_permissions(clean_sub)
         return user_entity, permissions
