@@ -33,10 +33,10 @@ export function TablaCoordenadas({
 }) {
   return (
     <div className="flex min-h-[550px] flex-1 flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xs">
-      <div className="flex items-center justify-between border-b border-slate-200/70 bg-slate-50/60 px-4 py-3">
-        <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-slate-200/70 bg-slate-50/60 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">
           <span>Edición de Datos</span>
-          <div className="flex gap-3 border-l border-slate-200 pl-4 font-bold lowercase text-accent-600">
+          <div className="flex flex-wrap gap-3 border-l border-slate-200 pl-4 font-bold lowercase text-accent-600">
             <button onClick={onAddRow} className="hover:underline">+ Fila</button>
             <button onClick={onAddColumn} className="hover:underline">+ Columna</button>
             <button onClick={onInvertColumns} className="flex items-center gap-1 hover:underline">
@@ -45,7 +45,7 @@ export function TablaCoordenadas({
           </div>
         </div>
         {results.length > 0 && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="secondary" icon={Download} onClick={onExportExcel}>Excel</Button>
             <Button size="sm" variant="secondary" icon={MapPin} onClick={onExportShapefile}>SHP</Button>
             <Button size="sm" variant="primary" icon={Save} onClick={onAddToLayer}>Añadir a capa</Button>

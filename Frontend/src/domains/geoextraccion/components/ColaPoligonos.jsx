@@ -9,13 +9,17 @@ export function ColaPoligonos({ count, onExportar, onDescartar }) {
   if (count === 0) return null
 
   return (
-    <div className="flex animate-pulse items-center rounded-xl border border-state-amber/30 bg-state-amber/10 px-4 py-2 shadow-xs">
-      <Layers size={18} className="mr-2 text-state-amber" />
-      <span className="text-[10px] font-black uppercase text-slate-700">{count} Polígonos en cola</span>
-      <Button variant="warning" size="sm" onClick={onExportar} className="ml-4">
-        EXPORTAR CAPA
-      </Button>
-      <IconButton icon={XCircle} size={16} tone="dangerActive" onClick={onDescartar} className="ml-2" />
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-state-amber/30 bg-state-amber/10 px-4 py-2 shadow-xs animate-pulse">
+      <div className="flex items-center gap-2">
+        <Layers size={18} className="shrink-0 text-state-amber" />
+        <span className="text-[10px] font-black uppercase text-slate-700">{count} Polígonos en cola</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button variant="warning" size="sm" onClick={onExportar}>
+          EXPORTAR CAPA
+        </Button>
+        <IconButton icon={XCircle} size={16} tone="dangerActive" onClick={onDescartar} />
+      </div>
     </div>
   )
 }
