@@ -154,9 +154,7 @@ export default function CapturaPage() {
     }
   }
 
-  const zoomIn = () => setZoom((z) => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)))
-  const zoomOut = () => setZoom((z) => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)))
-  const zoomReset = () => setZoom(1)
+  const zoomReset = () => setZoom(ZOOM_MIN)
 
   const handleImageChange = (e) => {
     const file = e.target.files[0]
@@ -451,7 +449,7 @@ export default function CapturaPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between border-b border-slate-200/60 pb-5">
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 border-b border-slate-200/60 pb-5">
         <div>
           <h1 className="text-2xl font-bold uppercase tracking-tight text-slate-900">Digitalización Cartográfica</h1>
           <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">Geo-Extract · G.A.M.C.</p>
@@ -462,8 +460,8 @@ export default function CapturaPage() {
 
       <div className={cn('grid grid-cols-1 gap-6', showTable && 'xl:grid-cols-12')}>
         <Card glass={false} className={showTable ? 'xl:col-span-5' : 'mx-auto w-full max-w-2xl'}>
-          <div className="mb-4 flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
-            <div className="flex items-center gap-4">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-[10px] font-black uppercase tracking-widest">
+            <div className="flex flex-wrap items-center gap-4">
               <span className="text-slate-400">Visor Documental</span>
               {imageSrc && (
                 <div className="flex items-center gap-1.5 normal-case">
@@ -490,46 +488,14 @@ export default function CapturaPage() {
                     disabled={zoom >= ZOOM_MAX}
                     title="Acercar"
                   />
+                  {zoom !== ZOOM_MIN && (
+                    <IconButton icon={RotateCcw} size={12} className="p-1" onClick={zoomReset} title="Zoom 100%" />
+                  )}
                 </div>
               )}
             </div>
 
-            <div className="flex items-center gap-4">
-              {imageSrc && (
-                <div className="flex items-center gap-1 normal-case tracking-normal">
-                  <button
-                    type="button"
-                    onClick={zoomOut}
-                    disabled={zoom <= ZOOM_MIN}
-                    className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
-                    title="Alejar"
-                  >
-                    <ZoomOut size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={zoomReset}
-                    className="min-w-[3ch] px-1 text-[10px] font-black text-slate-400 hover:text-slate-700"
-                    title="Restablecer zoom"
-                  >
-                    {Math.round(zoom * 100)}%
-                  </button>
-                  <button
-                    type="button"
-                    onClick={zoomIn}
-                    disabled={zoom >= ZOOM_MAX}
-                    className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
-                    title="Acercar"
-                  >
-                    <ZoomIn size={14} />
-                  </button>
-                  {zoom !== 1 && (
-                    <button type="button" onClick={zoomReset} className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800" title="Zoom 100%">
-                      <RotateCcw size={12} />
-                    </button>
-                  )}
-                </div>
-              )}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               {completedCrop && completedCrop.width > 5 && (
                 <button onClick={() => { setCompletedCrop(null); setCrop(undefined) }} className="flex items-center gap-1.5 text-state-amber transition-colors hover:text-state-orange-deep">
                   <XCircle size={14} /> Limpiar Selección
