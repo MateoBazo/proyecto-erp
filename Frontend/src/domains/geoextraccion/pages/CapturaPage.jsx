@@ -52,7 +52,6 @@ export default function CapturaPage() {
   const [zoom, setZoom] = useState(ZOOM_MIN)
   const imgRef = useRef(null)
   const viewerRef = useRef(null)
-  const [zoom, setZoom] = useState(1)
   const [baseWidth, setBaseWidth] = useState(null)
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState([])

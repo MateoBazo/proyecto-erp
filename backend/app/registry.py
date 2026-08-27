@@ -22,10 +22,3 @@ try:
     api_router.include_router(geoextraccion_router, prefix="/geoextraccion")
 except Exception as exc:
     logger.warning(f"No se pudo cargar el dominio 'geoextraccion': {exc}")
-
-# Próximos dominios (ej. catastro) se registran acá con el mismo patrón:
-# try:
-#     from app.domains.catastro.presentation.router import router as catastro_router
-#     api_router.include_router(catastro_router, prefix="/catastro")
-# except Exception as exc:
-#     logger.warning(f"No se pudo cargar el dominio 'catastro': {exc}")

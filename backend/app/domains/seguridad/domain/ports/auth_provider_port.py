@@ -24,6 +24,13 @@ class AuthProviderPort(ABC):
         pass
 
     @abstractmethod
+    def refresh_token(self, refresh_token: str) -> AuthToken:
+        """
+        Solicita un nuevo access_token a partir de un refresh_token vigente.
+        """
+        pass
+
+    @abstractmethod
     def verify_token(self, token: str) -> UserProfile:
         """
         Valida criptográficamente la firma del token JWT y retorna el perfil del usuario.

@@ -1,21 +1,28 @@
 from fastapi import APIRouter, Depends
 import logging
 
-from app.domains.seguridad.presentation.schemas.auth_schema import LoginRequest, LoginResponse
+from app.domains.seguridad.presentation.schemas.auth_schema import (
+    LoginRequest,
+    LoginResponse,
+    RefreshRequest,
+)
 from app.domains.seguridad.application.use_cases import (
     AuthenticateDomainUseCase,
     AuthenticateCredentialsUseCase,
+    RefreshTokenUseCase,
     VerifyTokenUseCase,
     SyncUserRbacUseCase,
 )
 from app.domains.seguridad.application.dtos.auth_dto import (
     DomainLoginInputDTO,
     CredentialsLoginInputDTO,
+    RefreshTokenInputDTO,
 )
 from app.domains.seguridad.domain.exceptions import InvalidDomainException
 from app.domains.seguridad.presentation.deps import (
     get_authenticate_domain_use_case,
     get_authenticate_credentials_use_case,
+    get_refresh_token_use_case,
     get_verify_token_use_case,
     get_sync_user_rbac_use_case,
 )
@@ -69,6 +76,27 @@ def login(
         return LoginResponse(
             message=result.message,
             access_token=result.access_token,
+            refresh_token=result.refresh_token,
+            expires_in=result.expires_in,
         )
 
     raise InvalidDomainException("Debe ingresar un dominio institucional o usuario y contraseña.")
+
+
+@router.post("/refresh", response_model=LoginResponse)
+def refresh(
+    payload: RefreshRequest,
+    refresh_use_case: RefreshTokenUseCase = Depends(get_refresh_token_use_case),
+):
+    """
+    Renueva la sesión a partir de un refresh_token vigente, sin requerir credenciales.
+    Permite un refresh silencioso desde el frontend antes de que expire el access_token.
+    """
+    result = refresh_use_case.execute(RefreshTokenInputDTO(refresh_token=payload.refresh_token))
+
+    return LoginResponse(
+        message=result.message,
+        access_token=result.access_token,
+        refresh_token=result.refresh_token,
+        expires_in=result.expires_in,
+    )

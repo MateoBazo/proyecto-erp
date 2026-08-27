@@ -16,11 +16,19 @@ class CredentialsLoginInputDTO:
 
 
 @dataclass(frozen=True)
+class RefreshTokenInputDTO:
+    """DTO de entrada para renovación de sesión mediante refresh_token."""
+    refresh_token: str
+
+
+@dataclass(frozen=True)
 class TokenOutputDTO:
     """DTO de salida tras un inicio de sesión exitoso."""
     message: str
     access_token: str
     domain: Optional[str] = None
+    refresh_token: Optional[str] = None
+    expires_in: Optional[int] = None
 
 
 @dataclass(frozen=True)

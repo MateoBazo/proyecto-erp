@@ -23,4 +23,6 @@ class AuthenticateCredentialsUseCase:
         return TokenOutputDTO(
             message="Credenciales correctas",
             access_token=token.access_token,
+            refresh_token=token.refresh_token,
+            expires_in=token.expires_in,
         )

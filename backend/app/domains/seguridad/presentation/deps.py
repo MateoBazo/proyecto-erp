@@ -9,6 +9,7 @@ from app.domains.seguridad.domain.entities.user import UserProfile
 from app.domains.seguridad.application.use_cases import (
     AuthenticateDomainUseCase,
     AuthenticateCredentialsUseCase,
+    RefreshTokenUseCase,
     VerifyTokenUseCase,
     SyncUserRbacUseCase,
 )
@@ -45,6 +46,13 @@ def get_authenticate_credentials_use_case(
 ) -> AuthenticateCredentialsUseCase:
     """Inyector del caso de uso de autenticación por credenciales directas."""
     return AuthenticateCredentialsUseCase(auth_provider=auth_provider)
+
+
+def get_refresh_token_use_case(
+    auth_provider: AuthProviderPort = Depends(get_auth_provider),
+) -> RefreshTokenUseCase:
+    """Inyector del caso de uso de renovación de sesión."""
+    return RefreshTokenUseCase(auth_provider=auth_provider)
 
 
 def get_verify_token_use_case(

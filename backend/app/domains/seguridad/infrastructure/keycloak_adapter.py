@@ -152,6 +152,38 @@ class KeycloakAdapter(AuthProviderPort):
         self._handle_token_error_response(response, context="password")
         raise InvalidCredentialsException("Credenciales incorrectas")
 
+    def refresh_token(self, refresh_token: str) -> AuthToken:
+        """
+        Solicita un nuevo access_token a Keycloak usando el grant_type 'refresh_token'.
+        """
+        data = {
+            "grant_type": "refresh_token",
+            "client_id": self._client_id,
+            "refresh_token": refresh_token,
+        }
+        if self._client_secret:
+            data["client_secret"] = self._client_secret
+
+        try:
+            response = requests.post(self._token_url, data=data, timeout=self._timeout)
+        except requests.RequestException as exc:
+            raise AuthProviderUnavailableException("No se pudo contactar a Keycloak") from exc
+
+        if response.status_code == 200:
+            token_data = response.json()
+            return AuthToken(
+                access_token=token_data.get("access_token", ""),
+                token_type=token_data.get("token_type", "Bearer"),
+                expires_in=token_data.get("expires_in"),
+                refresh_token=token_data.get("refresh_token"),
+                refresh_expires_in=token_data.get("refresh_expires_in"),
+                scope=token_data.get("scope"),
+                raw_payload=token_data,
+            )
+
+        self._handle_token_error_response(response, context="refresh_token")
+        raise InvalidCredentialsException("No se pudo renovar la sesión")
+
     def verify_token(self, token: str) -> UserProfile:
         """
         Valida el JWT emitido por Keycloak mediante su firma pública JWKS.

@@ -10,19 +10,13 @@ from app.registry import api_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Manejo del ciclo de vida de la aplicación:
-    Inicializa automáticamente las tablas de la base de datos si no existen.
-    """
+
     init_db_tables()
     yield
 
 
 def create_application() -> FastAPI:
-    """
-    Fábrica de inicialización de la aplicación FastAPI.
-    Configura middlewares, manejadores de errores de dominio y routers de la API.
-    """
+
     application = FastAPI(
         title=settings.PROJECT_NAME,
         version=settings.VERSION,

@@ -14,6 +14,13 @@ class LoginResponse(BaseModel):
     message: str
     access_token: str
     domain: Optional[str] = None
+    refresh_token: Optional[str] = None
+    expires_in: Optional[int] = None
+
+
+class RefreshRequest(BaseModel):
+    """Esquema para la solicitud de renovación de sesión."""
+    refresh_token: str = Field(..., description="Refresh token vigente emitido por Keycloak")
 
 
 class PublicMessageResponse(BaseModel):
