@@ -14,4 +14,16 @@ export const userService = {
   async getProfile(token) {
     return httpClient.get(API_ENDPOINTS.USER.PRIVATE_PROFILE, { token })
   },
+
+  /**
+   * Cambia la contraseña del usuario autenticado.
+   * TODO(equipo): pendiente el endpoint real en el backend (lo está armando otra persona).
+   * Cuando exista, agregar su ruta a API_ENDPOINTS.USER y reemplazar este stub por el
+   * httpClient.post correspondiente — la forma de la función ya queda lista para ese momento.
+   * @param {{ currentPassword: string, newPassword: string }} _payload
+   * @returns {Promise<void>}
+   */
+  async changePassword(_payload) {
+    throw new Error('El cambio de contraseña todavía no está disponible: falta integrar el backend.')
+  },
 }

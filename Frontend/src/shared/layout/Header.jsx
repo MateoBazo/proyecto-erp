@@ -1,9 +1,13 @@
-import { LogOut, Menu } from 'lucide-react'
+import { useState } from 'react'
+import { LogOut, Menu, User } from 'lucide-react'
 import escudoGamc from '@/assets/escudo-gamc.png'
 import { Button } from '@/shared/ui'
 import { ENV } from '@/core/config/env.config'
+import { PerfilModal } from './PerfilModal'
 
-export function Header({ onLogout, onToggleSidebar }) {
+export function Header({ onLogout, onToggleSidebar, user }) {
+  const [perfilOpen, setPerfilOpen] = useState(false)
+
   return (
     <header className="sticky top-0 z-10 border-b border-accent-400/40 bg-accent-300/95 shadow-sm px-4 py-3">
       <div className="mx-auto flex max-w-4xl items-center justify-between">
@@ -34,17 +38,30 @@ export function Header({ onLogout, onToggleSidebar }) {
           </div>
         </div>
 
-        {onLogout && (
+        <div className="flex items-center gap-2">
           <Button
-            variant="danger"
+            variant="secondary"
             size="sm"
-            onClick={onLogout}
-            icon={LogOut}
+            onClick={() => setPerfilOpen(true)}
+            icon={User}
           >
-            Cerrar sesión
+            Perfil
           </Button>
-        )}
+
+          {onLogout && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={onLogout}
+              icon={LogOut}
+            >
+              Cerrar sesión
+            </Button>
+          )}
+        </div>
       </div>
+
+      <PerfilModal open={perfilOpen} onClose={() => setPerfilOpen(false)} user={user} />
     </header>
   )
 }

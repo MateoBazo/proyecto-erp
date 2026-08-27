@@ -11,7 +11,7 @@ import { Sidebar } from './Sidebar'
  * Cualquier ruta protegida (dashboard, módulos del ERP) se monta dentro del <Outlet/>.
  */
 export function AppShell() {
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const isInsideModule = Boolean(getCurrentDomain(location.pathname))
@@ -38,6 +38,7 @@ export function AppShell() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header
+          user={user}
           onLogout={handleLogout}
           onToggleSidebar={isInsideModule ? () => setSidebarOpen((prev) => !prev) : undefined}
         />
