@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import {
   FileUp, Trash2, XCircle, FileSpreadsheet,
-  Save, ScanLine, ZoomIn, ZoomOut,
+  Save, ScanLine, ZoomIn, ZoomOut, RotateCcw,
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { toast } from 'react-toastify'
