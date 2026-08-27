@@ -31,13 +31,54 @@ export const authService = {
       throw new Error('No se recibió el token de acceso desde el servidor de autenticación.')
     }
 
-    // Persistir token y username
+    // Persistir token, refresh_token y username
     storageService.setToken(accessToken)
+    if (data.refresh_token) {
+      storageService.setRefreshToken(data.refresh_token)
+    }
     if (trimmedUsername) {
       storageService.setUsername(trimmedUsername)
     }
 
     const user = extractUserFromToken(accessToken, trimmedUsername)
+
+    return {
+      ...data,
+      user,
+    }
+  },
+
+  /**
+   * Renueva la sesión silenciosamente usando el refresh_token almacenado,
+   * sin requerir que el usuario vuelva a ingresar credenciales.
+   * @returns {Promise<{ access_token: string, refresh_token?: string, user: object }>}
+   */
+  async refreshSession() {
+    const refreshToken = storageService.getRefreshToken()
+
+    if (!refreshToken) {
+      throw new Error('No hay refresh_token disponible para renovar la sesión.')
+    }
+
+    const data = await httpClient.post(
+      API_ENDPOINTS.AUTH.REFRESH,
+      { refresh_token: refreshToken },
+      { requiresAuth: false }
+    )
+
+    const accessToken = data.access_token
+
+    if (!accessToken) {
+      throw new Error('No se recibió el token de acceso al renovar la sesión.')
+    }
+
+    storageService.setToken(accessToken)
+    if (data.refresh_token) {
+      storageService.setRefreshToken(data.refresh_token)
+    }
+
+    const savedUsername = storageService.getUsername()
+    const user = extractUserFromToken(accessToken, savedUsername)
 
     return {
       ...data,
@@ -61,9 +102,9 @@ export const authService = {
     const savedUsername = storageService.getUsername()
 
     if (!token || isTokenExpired(token)) {
-      if (token) {
-        storageService.clearAuth()
-      }
+      // No se limpia el refresh_token acá: si el access_token expiró mientras la pestaña
+      // estaba cerrada/inactiva, AuthProvider intenta restaurar la sesión con él antes
+      // de forzar el login (ver AuthProvider.initAuth).
       return { token: null, user: null, isValid: false }
     }
 

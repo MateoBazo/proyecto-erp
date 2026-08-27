@@ -4,6 +4,7 @@
 export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: '/api/login',
+    REFRESH: '/api/refresh',
   },
   USER: {
     PRIVATE_PROFILE: '/api/private',

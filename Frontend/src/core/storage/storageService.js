@@ -24,6 +24,24 @@ export const storageService = {
   },
 
   /**
+   * Guarda el refresh_token de la sesión
+   * @param {string} refreshToken
+   */
+  setRefreshToken(refreshToken) {
+    if (refreshToken) {
+      localStorage.setItem(STORAGE_KEYS.AUTH_REFRESH_TOKEN, refreshToken)
+    }
+  },
+
+  /**
+   * Obtiene el refresh_token de la sesión
+   * @returns {string|null}
+   */
+  getRefreshToken() {
+    return localStorage.getItem(STORAGE_KEYS.AUTH_REFRESH_TOKEN)
+  },
+
+  /**
    * Guarda el nombre de usuario de la sesión
    * @param {string} username
    */
@@ -47,5 +65,6 @@ export const storageService = {
   clearAuth() {
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
     localStorage.removeItem(STORAGE_KEYS.AUTH_USERNAME)
+    localStorage.removeItem(STORAGE_KEYS.AUTH_REFRESH_TOKEN)
   },
 }

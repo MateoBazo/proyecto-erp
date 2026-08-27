@@ -1,5 +1,5 @@
 import { Download, MapPin, Save, Trash2, XCircle, ArrowLeftRight, Loader2, FileSpreadsheet } from 'lucide-react'
-import { Button } from '@/shared/ui'
+import { Button, IconButton, EmptyState } from '@/shared/ui'
 import { cn } from '@/shared/utils'
 import { ENV } from '@/core/config/env.config'
 
@@ -78,9 +78,7 @@ export function TablaCoordenadas({
                       </select>
                       <div className="flex items-center justify-between text-[8px] font-black opacity-60">
                         <span>COL {i + 1}</span>
-                        <button onClick={() => onDeleteColumn(i)} className="text-slate-400 transition-colors hover:text-state-danger" title="Eliminar Columna">
-                          <Trash2 size={12} />
-                        </button>
+                        <IconButton icon={Trash2} size={12} tone="danger" className="p-0" onClick={() => onDeleteColumn(i)} title="Eliminar Columna" />
                       </div>
                     </div>
                   </th>
@@ -109,18 +107,15 @@ export function TablaCoordenadas({
                     </td>
                   ))}
                   <td className="p-1 text-center">
-                    <button onClick={() => onDeleteRow(row.id)} className="p-1 text-slate-300 hover:text-state-danger">
-                      <XCircle size={18} />
-                    </button>
+                    <IconButton icon={XCircle} size={18} tone="danger" className="p-1" onClick={() => onDeleteRow(row.id)} />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center py-40 text-slate-200">
-            <FileSpreadsheet size={64} className="mb-4 opacity-10" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Extracción Pendiente</p>
+          <div className="flex h-full items-center justify-center py-40">
+            <EmptyState icon={FileSpreadsheet} iconSize={64} tone="muted" title="Extracción Pendiente" />
           </div>
         )}
       </div>

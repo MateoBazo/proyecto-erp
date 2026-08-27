@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Card } from '@/shared/ui'
+import { Card, SectionHeader } from '@/shared/ui'
 import { DOMAIN_SECTIONS } from '@/shared/nav'
 
 function SubsystemTile({ label, path, icon: Icon }) {
@@ -28,19 +28,9 @@ export function DomainHome() {
 
   if (!domain) return null
 
-  const DomainIcon = domain.icon
-
   return (
     <Card>
-      <div className="mb-6 flex items-center gap-3 border-b border-slate-200/60 pb-4">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-50 text-accent-600 ring-1 ring-accent-200">
-          <DomainIcon className="h-5 w-5" />
-        </span>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent-600">Módulo</p>
-          <h2 className="text-lg font-bold text-slate-900">{domain.label}</h2>
-        </div>
-      </div>
+      <SectionHeader icon={domain.icon} eyebrow="Módulo" title={domain.label} />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {domain.children.map((item) => (

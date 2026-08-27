@@ -19,9 +19,8 @@ export function LoginPage() {
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-accent-600">
               {ENV.ORGANIZATION}
             </p>
-            <h1 className="text-2xl uppercase tracking-wide text-slate-900">
-              <span className="font-extrabold">Ecosistema</span>{' '}
-              <span className="font-normal text-slate-500">Herramienta GIS</span>
+            <h1 className="text-2xl font-extrabold uppercase tracking-wide text-slate-900">
+              {ENV.APP_NAME}
             </h1>
             <p className="mt-2 text-sm text-slate-500">
               Inicia sesión con tu usuario y contraseña

@@ -7,6 +7,8 @@ const VARIANTS = {
     'bg-white/80 text-slate-800 border border-slate-200 shadow-xs hover:bg-white hover:border-slate-300 focus-visible:ring-slate-400/50',
   danger:
     'bg-white/80 text-state-danger border border-state-danger/30 shadow-xs hover:bg-state-danger/10 hover:border-state-danger/50 focus-visible:ring-state-danger/40',
+  warning:
+    'bg-state-amber text-white shadow-md shadow-state-amber/20 hover:bg-state-orange-deep focus-visible:ring-state-amber/40',
   ghost:
     'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 focus-visible:ring-slate-400/50',
 }

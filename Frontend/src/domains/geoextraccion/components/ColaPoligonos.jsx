@@ -1,4 +1,5 @@
 import { Layers, XCircle } from 'lucide-react'
+import { Button, IconButton } from '@/shared/ui'
 
 /**
  * Aviso de polígonos en cola pendientes de exportar como capa masiva.
@@ -11,15 +12,10 @@ export function ColaPoligonos({ count, onExportar, onDescartar }) {
     <div className="flex animate-pulse items-center rounded-xl border border-state-amber/30 bg-state-amber/10 px-4 py-2 shadow-xs">
       <Layers size={18} className="mr-2 text-state-amber" />
       <span className="text-[10px] font-black uppercase text-slate-700">{count} Polígonos en cola</span>
-      <button
-        onClick={onExportar}
-        className="ml-4 rounded bg-state-amber px-4 py-1.5 text-[10px] font-black text-white shadow-lg transition-colors hover:bg-state-orange-deep"
-      >
+      <Button variant="warning" size="sm" onClick={onExportar} className="ml-4">
         EXPORTAR CAPA
-      </button>
-      <button onClick={onDescartar} className="ml-2 text-state-danger/70 transition-colors hover:text-state-danger">
-        <XCircle size={16} />
-      </button>
+      </Button>
+      <IconButton icon={XCircle} size={16} tone="dangerActive" onClick={onDescartar} className="ml-2" />
     </div>
   )
 }

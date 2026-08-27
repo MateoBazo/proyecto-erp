@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx'
 import { toast } from 'react-toastify'
 import ReactCrop from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { Card, Button } from '@/shared/ui'
+import { Card, Button, IconButton, EmptyState } from '@/shared/ui'
 import { cn } from '@/shared/utils'
 import { geoextraccionApi } from '../api/geoextraccion.api'
 import { TablaCoordenadas } from '../components/TablaCoordenadas'
@@ -446,6 +446,10 @@ export default function CapturaPage() {
     }
   }
 
+  // La tabla de resultados solo aparece una vez que se presiona "Extraer" (loading) o ya hay
+  // datos — antes de eso, la pantalla muestra únicamente la captura de la imagen.
+  const showTable = loading || results.length > 0
+
   return (
     <div className="space-y-6">
       <div className="flex items-end justify-between border-b border-slate-200/60 pb-5">
@@ -457,21 +461,21 @@ export default function CapturaPage() {
       </div>
       <p className="text-[10px] font-bold uppercase tracking-widest text-accent-600">Nota: Seleccione solo el área de números de las coordenadas</p>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-        <Card glass={false} className="xl:col-span-5">
+      <div className={cn('grid grid-cols-1 gap-6', showTable && 'xl:grid-cols-12')}>
+        <Card glass={false} className={showTable ? 'xl:col-span-5' : 'mx-auto w-full max-w-2xl'}>
           <div className="mb-4 flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
             <div className="flex items-center gap-4">
               <span className="text-slate-400">Visor Documental</span>
               {imageSrc && (
                 <div className="flex items-center gap-1.5 normal-case">
-                  <button
+                  <IconButton
+                    icon={ZoomOut}
+                    size={14}
+                    className="p-1"
                     onClick={() => setZoom((z) => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)))}
                     disabled={zoom <= ZOOM_MIN}
                     title="Alejar"
-                    className="rounded-lg p-1 text-slate-400 transition-colors hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30"
-                  >
-                    <ZoomOut size={14} />
-                  </button>
+                  />
                   <button
                     onClick={() => setZoom(ZOOM_MIN)}
                     title="Restablecer zoom"
@@ -479,14 +483,14 @@ export default function CapturaPage() {
                   >
                     {Math.round(zoom * 100)}%
                   </button>
-                  <button
+                  <IconButton
+                    icon={ZoomIn}
+                    size={14}
+                    className="p-1"
                     onClick={() => setZoom((z) => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)))}
                     disabled={zoom >= ZOOM_MAX}
                     title="Acercar"
-                    className="rounded-lg p-1 text-slate-400 transition-colors hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30"
-                  >
-                    <ZoomIn size={14} />
-                  </button>
+                  />
                 </div>
               )}
             </div>
@@ -574,13 +578,14 @@ export default function CapturaPage() {
               </ReactCrop>
             ) : (
               <div className="pointer-events-none p-10 text-center">
-                <FileSpreadsheet size={48} className={cn('mx-auto mb-4 transition-colors', isDragging ? 'text-accent-500' : 'text-slate-200')} />
-                <p className="mb-2 text-sm font-bold text-slate-600">
-                  {isDragging ? '¡Suelta la imagen aquí!' : 'Arrastra un documento escaneado'}
-                </p>
-                <p className="mb-6 text-xs font-medium text-slate-400">o si lo prefieres...</p>
+                <EmptyState
+                  icon={FileSpreadsheet}
+                  iconClassName={isDragging ? 'text-accent-500' : undefined}
+                  title={isDragging ? '¡Suelta la imagen aquí!' : 'Arrastra un documento escaneado'}
+                  subtitle={!isDragging ? 'o si lo prefieres...' : undefined}
+                />
 
-                <label className="pointer-events-auto inline-flex cursor-pointer items-center gap-2 rounded-xl bg-brand-800 px-8 py-3.5 text-[10px] font-black uppercase text-white shadow-md shadow-brand-800/20 transition-all hover:bg-brand-600">
+                <label className="pointer-events-auto mt-6 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-brand-800 px-8 py-3.5 text-[10px] font-black uppercase text-white shadow-md shadow-brand-800/20 transition-all hover:bg-brand-600">
                   <FileUp size={16} /> Explorar Archivos
                   <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                 </label>
@@ -620,24 +625,26 @@ export default function CapturaPage() {
           )}
         </Card>
 
-        <div className="xl:col-span-7">
-          <TablaCoordenadas
-            results={results}
-            columnTypes={columnTypes}
-            onColumnTypeChange={(idx, value) => setColumnTypes({ ...columnTypes, [idx]: value })}
-            onDeleteColumn={deleteColumn}
-            onEdit={handleEdit}
-            onDeleteRow={deleteRow}
-            onAddRow={addRow}
-            onAddColumn={addColumn}
-            onInvertColumns={invertColumns}
-            newRowIds={newRowIds}
-            loading={loading}
-            onExportExcel={exportToExcel}
-            onExportShapefile={exportSingleShapefile}
-            onAddToLayer={addToLayer}
-          />
-        </div>
+        {showTable && (
+          <div className="xl:col-span-7">
+            <TablaCoordenadas
+              results={results}
+              columnTypes={columnTypes}
+              onColumnTypeChange={(idx, value) => setColumnTypes({ ...columnTypes, [idx]: value })}
+              onDeleteColumn={deleteColumn}
+              onEdit={handleEdit}
+              onDeleteRow={deleteRow}
+              onAddRow={addRow}
+              onAddColumn={addColumn}
+              onInvertColumns={invertColumns}
+              newRowIds={newRowIds}
+              loading={loading}
+              onExportExcel={exportToExcel}
+              onExportShapefile={exportSingleShapefile}
+              onAddToLayer={addToLayer}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

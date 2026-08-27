@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Layers, UploadCloud, Trash2, FileArchive } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { Card, Button } from '@/shared/ui'
+import { Card, Button, IconButton, SectionHeader } from '@/shared/ui'
 import { cn } from '@/shared/utils'
 import { geoextraccionApi } from '../api/geoextraccion.api'
 
@@ -84,15 +84,7 @@ export default function FusionPage() {
 
   return (
     <Card>
-      <div className="mb-6 flex items-center gap-3 border-b border-slate-200/60 pb-4">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-50 text-accent-600 ring-1 ring-accent-200">
-          <Layers className="h-5 w-5" />
-        </span>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent-600">Geo-Extract</p>
-          <h2 className="text-lg font-bold text-slate-900">Fusión de Shapefiles</h2>
-        </div>
-      </div>
+      <SectionHeader icon={Layers} eyebrow="Geo-Extract" title="Fusión de Shapefiles" />
 
       <p className="mb-5 text-sm text-slate-500">Sube múltiples archivos ZIP generados para unirlos en una sola capa.</p>
 
@@ -125,9 +117,7 @@ export default function FusionPage() {
                   <FileArchive size={18} className="text-state-success" />
                   <span className="font-mono text-sm text-slate-700">{file.name}</span>
                 </div>
-                <button onClick={() => removeFile(idx)} className="text-slate-400 transition-colors hover:text-state-danger">
-                  <Trash2 size={16} />
-                </button>
+                <IconButton icon={Trash2} size={16} tone="danger" onClick={() => removeFile(idx)} />
               </li>
             ))}
           </ul>

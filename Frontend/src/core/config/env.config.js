@@ -3,7 +3,7 @@
  */
 export const ENV = {
   API_BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
-  APP_NAME: 'Ecosistema Herramienta GIS',
+  APP_NAME: 'IDEC',
   ORGANIZATION: 'GAMC',
   DEFAULT_CLIENT_ID: 'app-erp',
   IS_DEV: import.meta.env.DEV,
