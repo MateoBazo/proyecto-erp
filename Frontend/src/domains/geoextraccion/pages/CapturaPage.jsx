@@ -51,6 +51,9 @@ export default function CapturaPage() {
   const [completedCrop, setCompletedCrop] = useState(null)
   const [zoom, setZoom] = useState(ZOOM_MIN)
   const imgRef = useRef(null)
+  const viewerRef = useRef(null)
+  const [zoom, setZoom] = useState(1)
+  const [baseWidth, setBaseWidth] = useState(null)
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState([])
   const [columnTypes, setColumnTypes] = useState({})
@@ -151,6 +154,10 @@ export default function CapturaPage() {
       toast.error('Por favor, sube un archivo de imagen válido (JPG, PNG).')
     }
   }
+
+  const zoomIn = () => setZoom((z) => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)))
+  const zoomOut = () => setZoom((z) => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)))
+  const zoomReset = () => setZoom(1)
 
   const handleImageChange = (e) => {
     const file = e.target.files[0]
@@ -484,7 +491,42 @@ export default function CapturaPage() {
               )}
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex items-center gap-4">
+              {imageSrc && (
+                <div className="flex items-center gap-1 normal-case tracking-normal">
+                  <button
+                    type="button"
+                    onClick={zoomOut}
+                    disabled={zoom <= ZOOM_MIN}
+                    className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
+                    title="Alejar"
+                  >
+                    <ZoomOut size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={zoomReset}
+                    className="min-w-[3ch] px-1 text-[10px] font-black text-slate-400 hover:text-slate-700"
+                    title="Restablecer zoom"
+                  >
+                    {Math.round(zoom * 100)}%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={zoomIn}
+                    disabled={zoom >= ZOOM_MAX}
+                    className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
+                    title="Acercar"
+                  >
+                    <ZoomIn size={14} />
+                  </button>
+                  {zoom !== 1 && (
+                    <button type="button" onClick={zoomReset} className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800" title="Zoom 100%">
+                      <RotateCcw size={12} />
+                    </button>
+                  )}
+                </div>
+              )}
               {completedCrop && completedCrop.width > 5 && (
                 <button onClick={() => { setCompletedCrop(null); setCrop(undefined) }} className="flex items-center gap-1.5 text-state-amber transition-colors hover:text-state-orange-deep">
                   <XCircle size={14} /> Limpiar Selección
@@ -510,6 +552,7 @@ export default function CapturaPage() {
           </div>
 
           <div
+            ref={viewerRef}
             className={cn(
               'flex min-h-[450px] flex-col rounded-2xl border-2 transition-all duration-200 ease-in-out',
               imageSrc ? 'max-h-[500px] items-start justify-start overflow-auto border-slate-200 bg-slate-50/20' :
