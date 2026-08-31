@@ -41,7 +41,7 @@ export function UserProfileCard({ user }) {
             <span>Cliente</span>
           </div>
           <p className="text-base font-mono font-medium text-slate-800">
-            {user?.clientId || 'app-erp'}
+            {user?.clientId || 'app-idec'}
           </p>
         </div>
 

@@ -5,7 +5,7 @@ export const ENV = {
   API_BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
   APP_NAME: 'IDEC',
   ORGANIZATION: 'GAMC',
-  DEFAULT_CLIENT_ID: 'app-erp',
+  DEFAULT_CLIENT_ID: 'app-idec',
   IS_DEV: import.meta.env.DEV,
   // Servicio OCR externo del dominio geoextraccion — fuera del backend del ERP.
   OCR_API_URL: import.meta.env.VITE_OCR_API_URL || '',

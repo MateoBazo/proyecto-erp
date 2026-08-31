@@ -1,6 +1,6 @@
 # Ecosistema Herramienta GIS - Frontend
 
-Frontend desarrollado con **React 19**, **Vite** y **Tailwind CSS v4**, organizado como **monolito modular por dominio** (ver `/CLAUDE.md` en la raíz del repo para las reglas completas de arquitectura). La autenticación (`auth/`) sigue viviendo aparte de `domains/`. El primer dominio de negocio real es `domains/geoextraccion/` (digitalización cartográfica: captura OCR + fusión de Shapefiles) — es la referencia a copiar para el siguiente dominio; ver `/docs/COMO_AGREGAR_UN_DOMINIO.md` para la receta paso a paso.
+Frontend desarrollado con **React 19**, **Vite** y **Tailwind CSS v4**, organizado como **monolito modular por dominio** (ver `/CLAUDE.md` en la raíz del repo para las reglas completas de arquitectura). La autenticación (`auth/`) sigue viviendo aparte de `domains/`. El primer dominio de negocio real es `domains/geoextraccion/` (digitalización cartográfica: captura OCR + fusión de Shapefiles) — es la referencia a copiar para el siguiente dominio; ver `/docs/COMO_AGREGAR_UN_DOMINIO.md` para la receta paso a paso. `domains/seguridad/` (módulo "Roles" en el sidebar: Permisos y Roles/Áreas) es el segundo — hoy solo front, con datos de ejemplo en memoria (`data/seguridadStore.js`) hasta que se conecte al backend real del dominio `seguridad`.
 
 ---
 
@@ -38,8 +38,11 @@ Frontend/
     │   └── utils/                  # jwt.util, validation.util, classNames.util (cn)
     ├── domains/                    # cada dominio de negocio con pantallas reales
     │   ├── index.js                 # único lugar que conoce todos los dominios (equivalente frontend de backend/app/registry.py)
-    │   └── geoextraccion/            # captura OCR + fusión de Shapefiles (primer dominio real, ex-proyecto standalone geo-extract/)
-    │       ├── pages/ · components/ · api/ · utils/ · routes.jsx
+    │   ├── geoextraccion/            # captura OCR + fusión de Shapefiles (primer dominio real, ex-proyecto standalone geo-extract/)
+    │   │   └── pages/ · components/ · api/ · utils/ · routes.jsx
+    │   └── seguridad/                 # módulo "Roles": Permisos (asignar rol+área a usuarios) y Roles/Áreas (CRUD)
+    │       ├── pages/ · components/ · data/ · routes.jsx
+    │       └── data/seguridadStore.js  # mock en memoria — sin backend todavía
     ├── assets/                     # Recursos estáticos (escudo oficial GAMC, imágenes, iconos)
     ├── main.jsx                    # Punto de entrada de la aplicación
     └── index.css                   # Estilos globales y tokens Tailwind v4
