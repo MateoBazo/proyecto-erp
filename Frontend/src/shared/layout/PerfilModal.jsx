@@ -12,9 +12,8 @@ const initialPasswordValues = {
 }
 
 /**
- * Modal de Perfil: datos del usuario autenticado + cambio de contraseña.
- * El cambio de contraseña es solo frontend por ahora — el endpoint lo está armando otra
- * persona (ver TODO en auth/services/user.service.js#changePassword) y se conecta después.
+ * Modal de Perfil: datos del usuario autenticado + cambio de contraseña
+ * (POST /api/change-password-institucional, directorio Zentyal).
  */
 export function PerfilModal({ open, onClose, user }) {
   const [showForm, setShowForm] = useState(false)
@@ -53,12 +52,17 @@ export function PerfilModal({ open, onClose, user }) {
     setTouched({ currentPassword: true, newPassword: true, confirmPassword: true })
     if (Object.keys(errors).length > 0) return
 
+    if (!user?.username) {
+      setFormError('No se pudo determinar el usuario de la sesión. Volvé a iniciar sesión e intentá de nuevo.')
+      return
+    }
+
     setSubmitting(true)
     setFormError('')
     setSuccessMessage('')
     try {
-      await userService.changePassword({
-        currentPassword: values.currentPassword,
+      await userService.changeInstitutionalPassword({
+        username: user.username,
         newPassword: values.newPassword,
       })
       setSuccessMessage('Contraseña actualizada correctamente.')

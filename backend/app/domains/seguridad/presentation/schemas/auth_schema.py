@@ -23,6 +23,18 @@ class RefreshRequest(BaseModel):
     refresh_token: str = Field(..., description="Refresh token vigente emitido por Keycloak")
 
 
+class ChangePasswordRequest(BaseModel):
+    """Esquema para la solicitud de cambio de contraseña del usuario autenticado."""
+    current_password: str = Field(..., description="Contraseña actual del usuario")
+    new_password: str = Field(..., min_length=8, description="Nueva contraseña (mínimo 8 caracteres)")
+
+
+class ResetInstitutionalPasswordRequest(BaseModel):
+    """Esquema para el reseteo administrativo de contraseña de un usuario institucional (Zentyal)."""
+    username: str = Field(..., description="Nombre de usuario institucional (cn en el directorio Zentyal)")
+    new_password: str = Field(..., min_length=8, description="Nueva contraseña (mínimo 8 caracteres)")
+
+
 class PublicMessageResponse(BaseModel):
     """Esquema de respuesta para rutas públicas."""
     message: str

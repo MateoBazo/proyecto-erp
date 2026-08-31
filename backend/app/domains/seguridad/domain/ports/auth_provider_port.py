@@ -36,3 +36,11 @@ class AuthProviderPort(ABC):
         Valida criptográficamente la firma del token JWT y retorna el perfil del usuario.
         """
         pass
+
+    @abstractmethod
+    def change_password(self, access_token: str, current_password: str, new_password: str) -> None:
+        """
+        Cambia la contraseña del usuario dueño del access_token (self-service).
+        El proveedor de identidad valida `current_password` internamente.
+        """
+        pass

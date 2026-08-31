@@ -12,12 +12,26 @@ class Settings(BaseSettings):
     VERSION: str = "2.0.0"
     API_V1_STR: str = "/api"
 
-    # Keycloak
+    # Keycloak — valores reales se cargan desde .env (nunca hardcodear secretos acá)
     KEYCLOAK_URL: str = "https://auth.catastrocbba.com"
-    KEYCLOAK_REALM: str = "master"
-    KEYCLOAK_CLIENT_ID: str = "app-erp"
+    KEYCLOAK_REALM: str = "alcaldia-idec"
+    KEYCLOAK_CLIENT_ID: str = "app-idec"
     KEYCLOAK_CLIENT_SECRET: str = ""
     KEYCLOAK_TIMEOUT_SECONDS: int = 20
+
+    # Zentyal (LDAP/Samba4 AD-DC) — integración de directorio institucional
+    # valores reales se cargan desde .env (nunca hardcodear secretos acá)
+    ZENTYAL_LDAP_HOST: str = ""
+    ZENTYAL_LDAP_PORT: int = 636
+    ZENTYAL_LDAP_USE_SSL: bool = True
+    ZENTYAL_LDAP_VERIFY_CERT: bool = False
+    ZENTYAL_LDAP_BIND_DN: str = ""
+    ZENTYAL_LDAP_BIND_PASSWORD: str = ""
+    # Base y filtro de búsqueda para resolver el DN real del usuario antes de escribir
+    # (el `cn` casi nunca coincide con el username de login en AD/Samba4 — no armar el DN a mano)
+    ZENTYAL_LDAP_SEARCH_BASE_DN: str = "dc=catastrocbba,dc=com"
+    ZENTYAL_LDAP_USER_SEARCH_FILTER: str = "(sAMAccountName={username})"
+    ZENTYAL_LDAP_TIMEOUT_SECONDS: int = 10
 
     # CORS
     FRONTEND_ORIGIN: str = "http://localhost:3000"

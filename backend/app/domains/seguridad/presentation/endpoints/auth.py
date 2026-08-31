@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Security
+from fastapi.security import HTTPAuthorizationCredentials
 import logging
 
 from app.domains.seguridad.presentation.schemas.auth_schema import (
     LoginRequest,
     LoginResponse,
     RefreshRequest,
+    ChangePasswordRequest,
+    ResetInstitutionalPasswordRequest,
+    PublicMessageResponse,
 )
 from app.domains.seguridad.application.use_cases import (
     AuthenticateDomainUseCase,
@@ -12,19 +16,28 @@ from app.domains.seguridad.application.use_cases import (
     RefreshTokenUseCase,
     VerifyTokenUseCase,
     SyncUserRbacUseCase,
+    ChangePasswordUseCase,
+    ResetInstitutionalPasswordUseCase,
 )
 from app.domains.seguridad.application.dtos.auth_dto import (
     DomainLoginInputDTO,
     CredentialsLoginInputDTO,
     RefreshTokenInputDTO,
+    ChangePasswordInputDTO,
+    ResetInstitutionalPasswordInputDTO,
 )
 from app.domains.seguridad.domain.exceptions import InvalidDomainException
+from app.domains.seguridad.domain.entities.user import UserProfile
 from app.domains.seguridad.presentation.deps import (
     get_authenticate_domain_use_case,
     get_authenticate_credentials_use_case,
     get_refresh_token_use_case,
     get_verify_token_use_case,
     get_sync_user_rbac_use_case,
+    get_change_password_use_case,
+    get_reset_institutional_password_use_case,
+    get_current_user,
+    security,
 )
 
 logger = logging.getLogger("uvicorn.error")
@@ -100,3 +113,50 @@ def refresh(
         refresh_token=result.refresh_token,
         expires_in=result.expires_in,
     )
+
+
+@router.post("/change-password", response_model=PublicMessageResponse)
+def change_password(
+    payload: ChangePasswordRequest,
+    credentials: HTTPAuthorizationCredentials = Security(security),
+    change_password_use_case: ChangePasswordUseCase = Depends(get_change_password_use_case),
+):
+    """
+    Cambia la contraseña del usuario autenticado (Bearer token) contra Keycloak.
+    Requiere la contraseña actual: Keycloak la valida vía su Account REST API.
+    """
+    change_password_use_case.execute(
+        ChangePasswordInputDTO(
+            access_token=credentials.credentials,
+            current_password=payload.current_password,
+            new_password=payload.new_password,
+        )
+    )
+    return PublicMessageResponse(message="Contraseña actualizada correctamente.")
+
+
+@router.post("/change-password-institucional", response_model=PublicMessageResponse)
+def reset_institutional_password(
+    payload: ResetInstitutionalPasswordRequest,
+    current_user: UserProfile = Depends(get_current_user),
+    use_case: ResetInstitutionalPasswordUseCase = Depends(get_reset_institutional_password_use_case),
+):
+    """
+    Resetea la contraseña de un usuario institucional directamente en el directorio
+    Zentyal (LDAPS + unicodePwd), usando la cuenta de servicio administrativa
+    configurada por entorno. No es self-service: no valida la contraseña actual.
+
+    ⚠️ Solo exige un Bearer token válido (`get_current_user`). Todavía NO valida un
+    permiso de negocio fino (ej. `seguridad.usuarios.resetear_password_institucional`)
+    porque ese mecanismo de autorización por permisos no está implementado en el
+    backend aún (CLAUDE.md §4/§10). Hoy, cualquier usuario autenticado puede resetear
+    la contraseña de cualquier otro usuario institucional — no exponer este endpoint
+    fuera de un ambiente de pruebas sin resolver esto antes.
+    """
+    use_case.execute(
+        ResetInstitutionalPasswordInputDTO(
+            username=payload.username,
+            new_password=payload.new_password,
+        )
+    )
+    return PublicMessageResponse(message="Contraseña institucional actualizada correctamente en el directorio.")

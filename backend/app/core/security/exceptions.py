@@ -23,3 +23,8 @@ class TokenExpiredException(TokenVerificationException):
 class AuthProviderUnavailableException(DomainException):
     """Se lanza cuando el servidor de autenticación (Keycloak) es inalcanzable o falla la conexión."""
     http_status = 502
+
+
+class DirectoryProviderUnavailableException(DomainException):
+    """Se lanza cuando el directorio institucional (Zentyal/LDAP) es inalcanzable, no está configurado o falla el bind."""
+    http_status = 502

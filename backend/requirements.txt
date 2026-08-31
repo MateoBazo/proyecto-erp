@@ -7,6 +7,7 @@ requests==2.32.3
 python-dotenv==1.0.1
 sqlalchemy>=2.0.30
 psycopg2-binary>=2.9.9
+ldap3==2.9.1
 
 # Dominio geoextraccion
 python-multipart>=0.0.9

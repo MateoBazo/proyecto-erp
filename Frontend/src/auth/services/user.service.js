@@ -16,14 +16,30 @@ export const userService = {
   },
 
   /**
-   * Cambia la contraseña del usuario autenticado.
-   * TODO(equipo): pendiente el endpoint real en el backend (lo está armando otra persona).
-   * Cuando exista, agregar su ruta a API_ENDPOINTS.USER y reemplazar este stub por el
-   * httpClient.post correspondiente — la forma de la función ya queda lista para ese momento.
-   * @param {{ currentPassword: string, newPassword: string }} _payload
+   * Cambia la contraseña del usuario autenticado contra Keycloak (vía POST /api/change-password).
+   * El backend valida `current_password` y aplica la nueva usando el access_token de la sesión.
+   * @param {{ currentPassword: string, newPassword: string }} payload
    * @returns {Promise<void>}
    */
-  async changePassword(_payload) {
-    throw new Error('El cambio de contraseña todavía no está disponible: falta integrar el backend.')
+  async changePassword({ currentPassword, newPassword }) {
+    await httpClient.post(API_ENDPOINTS.USER.CHANGE_PASSWORD, {
+      current_password: currentPassword,
+      new_password: newPassword,
+    })
+  },
+
+  /**
+   * Cambia la contraseña del usuario institucional directamente en el directorio Zentyal
+   * (vía POST /api/change-password-institucional). No valida `currentPassword` contra el
+   * directorio (el backend usa una cuenta de servicio administrativa) — la sesión Bearer
+   * ya prueba la identidad del usuario.
+   * @param {{ username: string, newPassword: string }} payload
+   * @returns {Promise<void>}
+   */
+  async changeInstitutionalPassword({ username, newPassword }) {
+    await httpClient.post(API_ENDPOINTS.USER.CHANGE_PASSWORD_INSTITUCIONAL, {
+      username,
+      new_password: newPassword,
+    })
   },
 }
