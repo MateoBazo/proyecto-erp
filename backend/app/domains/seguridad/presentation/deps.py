@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.domains.seguridad.domain.ports.auth_provider_port import AuthProviderPort
 from app.domains.seguridad.domain.ports.user_repository_port import UserRepositoryPort
+from app.domains.seguridad.domain.ports.directory_provider_port import DirectoryProviderPort
 from app.domains.seguridad.domain.entities.user import UserProfile
 from app.domains.seguridad.application.use_cases import (
     AuthenticateDomainUseCase,
@@ -12,8 +13,11 @@ from app.domains.seguridad.application.use_cases import (
     RefreshTokenUseCase,
     VerifyTokenUseCase,
     SyncUserRbacUseCase,
+    ChangePasswordUseCase,
+    ResetInstitutionalPasswordUseCase,
 )
 from app.domains.seguridad.infrastructure.keycloak_adapter import KeycloakAdapter
+from app.domains.seguridad.infrastructure.zentyal_ldap_adapter import ZentyalLdapAdapter
 from app.core.security.jwks_service import JWKSService
 from app.core.database.connection import get_db
 from app.domains.seguridad.infrastructure.sql_user_repository import SqlUserRepository
@@ -72,6 +76,26 @@ def get_sync_user_rbac_use_case(
 ) -> SyncUserRbacUseCase:
     """Inyector del caso de uso de sincronización RBAC."""
     return SyncUserRbacUseCase(user_repository=user_repository)
+
+
+def get_change_password_use_case(
+    auth_provider: AuthProviderPort = Depends(get_auth_provider),
+) -> ChangePasswordUseCase:
+    """Inyector del caso de uso de cambio de contraseña."""
+    return ChangePasswordUseCase(auth_provider=auth_provider)
+
+
+@lru_cache()
+def get_directory_provider() -> DirectoryProviderPort:
+    """Instancia única (singleton cacheado) del adaptador de directorio Zentyal."""
+    return ZentyalLdapAdapter()
+
+
+def get_reset_institutional_password_use_case(
+    directory_provider: DirectoryProviderPort = Depends(get_directory_provider),
+) -> ResetInstitutionalPasswordUseCase:
+    """Inyector del caso de uso de reseteo administrativo de contraseña institucional."""
+    return ResetInstitutionalPasswordUseCase(directory_provider=directory_provider)
 
 
 def get_current_user(

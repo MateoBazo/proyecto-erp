@@ -217,6 +217,48 @@ class KeycloakAdapter(AuthProviderPort):
 
         return self._map_payload_to_user_profile(payload)
 
+    def change_password(self, access_token: str, current_password: str, new_password: str) -> None:
+        """
+        Cambia la contraseña vía la Account REST API de Keycloak (`/realms/{realm}/account/credentials/password`).
+        Es self-service: Keycloak valida `current_password` usando el propio access_token del usuario,
+        sin requerir credenciales de administrador ni un client con Service accounts habilitado.
+        """
+        url = f"{self._issuer}/account/credentials/password"
+
+        try:
+            response = requests.post(
+                url,
+                json={
+                    "currentPassword": current_password,
+                    "newPassword": new_password,
+                    "confirmation": new_password,
+                },
+                headers={"Authorization": f"Bearer {access_token}"},
+                timeout=self._timeout,
+            )
+        except requests.RequestException as exc:
+            raise AuthProviderUnavailableException("No se pudo contactar a Keycloak") from exc
+
+        if response.status_code in (200, 204):
+            return
+
+        if response.status_code == 401:
+            raise TokenExpiredException("La sesión expiró. Vuelve a iniciar sesión para cambiar la contraseña.")
+
+        try:
+            error_data = response.json()
+            error_message = error_data.get("errorMessage") or error_data.get("error_description") or ""
+        except Exception:
+            error_message = response.text
+
+        if "invalidPasswordExistingMessage" in error_message:
+            raise InvalidCredentialsException("La contraseña actual es incorrecta.")
+
+        if error_message:
+            raise InvalidCredentialsException(f"No se pudo cambiar la contraseña: {error_message}")
+
+        raise InvalidCredentialsException(f"No se pudo cambiar la contraseña (código HTTP {response.status_code})")
+
     @staticmethod
     def _map_payload_to_user_profile(payload: Dict[str, Any]) -> UserProfile:
         username = (

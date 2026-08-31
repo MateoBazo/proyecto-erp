@@ -24,7 +24,7 @@ ERP
 ```
 
 | Relación | ¿Permitido? |
-|---|---|
+|---       |---          |
 | Dominio → `core/` (shared kernel) | Sí, siempre |
 | Módulo → otro módulo del **mismo** dominio | Sí |
 | Dominio A → `contracts/` de Dominio B | Sí — es el único punto de entrada permitido |

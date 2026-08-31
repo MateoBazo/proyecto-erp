@@ -22,6 +22,21 @@ class RefreshTokenInputDTO:
 
 
 @dataclass(frozen=True)
+class ChangePasswordInputDTO:
+    """DTO de entrada para cambio de contraseña del usuario autenticado."""
+    access_token: str
+    current_password: str
+    new_password: str
+
+
+@dataclass(frozen=True)
+class ResetInstitutionalPasswordInputDTO:
+    """DTO de entrada para el reseteo administrativo de contraseña de un usuario institucional (Zentyal)."""
+    username: str
+    new_password: str
+
+
+@dataclass(frozen=True)
 class TokenOutputDTO:
     """DTO de salida tras un inicio de sesión exitoso."""
     message: str
