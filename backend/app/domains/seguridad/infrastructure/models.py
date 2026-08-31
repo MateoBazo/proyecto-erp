@@ -19,6 +19,14 @@ def _uuid_pk() -> Column:
     return Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
 
 
+def _fecha_creacion() -> Column:
+    return Column(DateTime, server_default=text("now()"))
+
+
+def _fecha_actualizacion() -> Column:
+    return Column(DateTime, server_default=text("now()"))
+
+
 class SistemaModel(Base):
     __tablename__ = "sistema"
 
@@ -26,6 +34,8 @@ class SistemaModel(Base):
     nombre = Column(String(100), nullable=False)
     activo = Column(Boolean, server_default=text("true"))
     descripcion = Column(String(255))
+    fecha_creacion = _fecha_creacion()
+    fecha_actualizacion = _fecha_actualizacion()
 
     subsistemas = relationship("SubsistemaModel", back_populates="sistema", cascade="all, delete-orphan")
 
@@ -38,6 +48,8 @@ class SubsistemaModel(Base):
     nombre = Column(String(100), nullable=False)
     activo = Column(Boolean, server_default=text("true"))
     es_opcional = Column(Boolean, server_default=text("false"))
+    fecha_creacion = _fecha_creacion()
+    fecha_actualizacion = _fecha_actualizacion()
 
     sistema = relationship("SistemaModel", back_populates="subsistemas")
     recursos = relationship("RecursoModel", back_populates="subsistema", cascade="all, delete-orphan")
@@ -50,6 +62,8 @@ class RecursoModel(Base):
     subsistema_id = Column(UUID(as_uuid=True), ForeignKey("subsistema.id", ondelete="CASCADE"), nullable=False)
     nombre = Column(String(100), nullable=False)
     ruta_endpoint = Column(String(200))
+    fecha_creacion = _fecha_creacion()
+    fecha_actualizacion = _fecha_actualizacion()
 
     subsistema = relationship("SubsistemaModel", back_populates="recursos")
     permisos = relationship("PermisoModel", back_populates="recurso", cascade="all, delete-orphan")
@@ -65,6 +79,8 @@ class UsuarioModel(Base):
     username = Column(String(50), nullable=False, unique=True)
     correo = Column(String(100))
     activo = Column(Boolean, server_default=text("true"))
+    fecha_creacion = _fecha_creacion()
+    fecha_actualizacion = _fecha_actualizacion()
 
     asignaciones = relationship("UsuarioRolAreaModel", back_populates="usuario", cascade="all, delete-orphan")
 
@@ -75,6 +91,8 @@ class AreaModel(Base):
     id = _uuid_pk()
     nombre = Column(String(100), nullable=False)
     tipo = Column(String(50))
+    fecha_creacion = _fecha_creacion()
+    fecha_actualizacion = _fecha_actualizacion()
 
 
 class RolInternoModel(Base):
@@ -86,6 +104,8 @@ class RolInternoModel(Base):
     nombre = Column(String(50), nullable=False)
     descripcion = Column(String(150))
     activo = Column(Boolean, server_default=text("true"))
+    fecha_creacion = _fecha_creacion()
+    fecha_actualizacion = _fecha_actualizacion()
 
     asignaciones = relationship("UsuarioRolAreaModel", back_populates="rol")
     permisos = relationship("PermisoModel", secondary="rol_permiso", back_populates="roles")
@@ -101,6 +121,7 @@ class UsuarioRolAreaModel(Base):
     usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuario.id", ondelete="CASCADE"), nullable=False)
     rol_id = Column(UUID(as_uuid=True), ForeignKey("rol_interno.id", ondelete="CASCADE"), nullable=False)
     area_id = Column(UUID(as_uuid=True), ForeignKey("area.id", ondelete="CASCADE"), nullable=False)
+    fecha_creacion = _fecha_creacion()
 
     usuario = relationship("UsuarioModel", back_populates="asignaciones")
     rol = relationship("RolInternoModel", back_populates="asignaciones")
@@ -118,6 +139,7 @@ class PermisoModel(Base):
     recurso_id = Column(UUID(as_uuid=True), ForeignKey("recurso.id", ondelete="CASCADE"), nullable=False)
     accion = Column(String(50), nullable=False)
     descripcion = Column(String(150))
+    fecha_creacion = _fecha_creacion()
 
     recurso = relationship("RecursoModel", back_populates="permisos")
     roles = relationship("RolInternoModel", secondary="rol_permiso", back_populates="permisos")
@@ -129,6 +151,7 @@ class RolPermisoModel(Base):
     id = _uuid_pk()
     rol_id = Column(UUID(as_uuid=True), ForeignKey("rol_interno.id", ondelete="CASCADE"), nullable=False)
     permiso_id = Column(UUID(as_uuid=True), ForeignKey("permiso.id", ondelete="CASCADE"), nullable=False)
+    fecha_creacion = _fecha_creacion()
 
 
 class AuditoriaAccesoModel(Base):
@@ -143,6 +166,7 @@ class AuditoriaAccesoModel(Base):
     permitido = Column(Boolean)
     timestamp = Column(DateTime, server_default=text("now()"))
     ip_origen = Column(String(45))
+    descripcion = Column(String(255))
 
 
 class AuditoriaGeoocrModel(Base):
