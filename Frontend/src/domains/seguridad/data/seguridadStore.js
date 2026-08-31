@@ -50,6 +50,19 @@ export const seguridadActions = {
       areas: [...s.areas, { id: crypto.randomUUID(), nombre }],
     }))
   },
+  actualizarArea(areaId, nombre) {
+    setState((s) => ({
+      areas: s.areas.map((a) => (a.id === areaId ? { ...a, nombre } : a)),
+    }))
+  },
+  eliminarArea(areaId) {
+    setState((s) => ({
+      areas: s.areas.filter((a) => a.id !== areaId),
+      // Limpia el área de cualquier usuario que la tuviera asignada para no dejar
+      // referencias colgadas (PermisosPage la mostraría como "Sin área").
+      usuarios: s.usuarios.map((u) => (u.areaId === areaId ? { ...u, areaId: '' } : u)),
+    }))
+  },
   asignarRolArea(usuarioId, { rolId, areaId }) {
     setState((s) => ({
       usuarios: s.usuarios.map((u) => (u.id === usuarioId ? { ...u, rolId, areaId } : u)),
