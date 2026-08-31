@@ -43,6 +43,9 @@ export const seguridadActions = {
   eliminarRol(rolId) {
     setState((s) => ({
       roles: s.roles.filter((r) => r.id !== rolId),
+      // Limpia el rol de cualquier usuario que lo tuviera asignado para no dejar
+      // referencias colgadas (PermisosPage lo mostraría como "Sin rol").
+      usuarios: s.usuarios.map((u) => (u.rolId === rolId ? { ...u, rolId: '' } : u)),
     }))
   },
   crearArea(nombre) {

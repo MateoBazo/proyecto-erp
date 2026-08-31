@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { KeyRound, Plus, Pencil, Trash2, Building2 } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { Card, SectionHeader, Button, Badge, IconButton, EmptyState } from '@/shared/ui'
+import { Card, SectionHeader, Button, Badge, IconButton, EmptyState, ConfirmDialog } from '@/shared/ui'
 import { useSeguridadData, seguridadActions } from '../data/seguridadStore'
 import { RolFormModal } from '../components/RolFormModal'
 import { AreaFormModal } from '../components/AreaFormModal'
@@ -20,6 +20,9 @@ export default function RolesPage() {
   // y que arranque limpio, sin necesitar un efecto que resetee el estado del formulario.
   const [modalToken, setModalToken] = useState(0)
   const [areaModalToken, setAreaModalToken] = useState(0)
+  // null = sin confirmación pendiente, objeto = registro esperando confirmar su borrado
+  const [rolPorEliminar, setRolPorEliminar] = useState(null)
+  const [areaPorEliminar, setAreaPorEliminar] = useState(null)
 
   const abrirModalRol = (rol) => {
     setRolEnEdicion(rol)
@@ -92,7 +95,7 @@ export default function RolesPage() {
                     <IconButton
                       icon={Trash2}
                       tone="danger"
-                      onClick={() => handleEliminarRol(rol)}
+                      onClick={() => setRolPorEliminar(rol)}
                       aria-label={`Eliminar ${rol.nombre}`}
                     />
                   </div>
@@ -135,7 +138,7 @@ export default function RolesPage() {
                     <IconButton
                       icon={Trash2}
                       tone="danger"
-                      onClick={() => handleEliminarArea(area)}
+                      onClick={() => setAreaPorEliminar(area)}
                       aria-label={`Eliminar ${area.nombre}`}
                     />
                   </div>
@@ -157,6 +160,30 @@ export default function RolesPage() {
         open={areaEnEdicion !== undefined}
         onClose={() => setAreaEnEdicion(undefined)}
         area={areaEnEdicion || undefined}
+      />
+
+      <ConfirmDialog
+        open={rolPorEliminar !== null}
+        onClose={() => setRolPorEliminar(null)}
+        onConfirm={() => handleEliminarRol(rolPorEliminar)}
+        title="Eliminar rol"
+        message={
+          rolPorEliminar
+            ? `Se eliminará el rol "${rolPorEliminar.nombre}". Los usuarios que lo tengan asignado quedarán sin rol.`
+            : ''
+        }
+      />
+
+      <ConfirmDialog
+        open={areaPorEliminar !== null}
+        onClose={() => setAreaPorEliminar(null)}
+        onConfirm={() => handleEliminarArea(areaPorEliminar)}
+        title="Eliminar área"
+        message={
+          areaPorEliminar
+            ? `Se eliminará el área "${areaPorEliminar.nombre}". Los usuarios que la tengan asignada quedarán sin área.`
+            : ''
+        }
       />
     </>
   )
