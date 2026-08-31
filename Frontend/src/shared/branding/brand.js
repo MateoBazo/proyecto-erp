@@ -1,12 +1,24 @@
-import escudoGamc from '@/assets/escudo-gamc.png'
+// El logo se toma automáticamente de la ÚNICA imagen que haya en
+// `src/assets/branding/`. Para cambiarlo: borrá la imagen actual de esa
+// carpeta y poné la nueva (cualquier nombre: .png/.jpg/.svg/.webp).
+// No hace falta tocar este archivo.
+const logos = import.meta.glob('@/assets/branding/*.{png,jpg,jpeg,svg,webp}', {
+  eager: true,
+  import: 'default',
+})
 
-/**
- * Identidad institucional (logo) del ERP — fuente única de verdad para que Header,
- * LoginPage y cualquier otra pantalla que necesite mostrar el escudo lo hagan desde
- * un solo lugar. Nombre de app/organización van en core/config/env.config (ENV).
- * Cambiar el logo (archivo, alt) se hace acá una sola vez.
- */
+const entradas = Object.entries(logos).sort(([a], [b]) => a.localeCompare(b))
+
+if (import.meta.env.DEV && entradas.length !== 1) {
+  console.warn(
+    `[brand] Se esperaba exactamente 1 imagen en src/assets/branding/, ` +
+      `hay ${entradas.length}. Se usa la primera por orden alfabético.`,
+  )
+}
+
+const logoSrc = entradas[0]?.[1]
+
 export const BRAND = {
-  logoSrc: escudoGamc,
+  logoSrc,
   logoAlt: 'Escudo del Gobierno Autónomo Municipal de Cochabamba',
 }
