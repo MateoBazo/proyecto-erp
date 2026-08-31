@@ -1,33 +1,47 @@
 import { useState } from 'react'
 import { KeyRound, Plus, Pencil, Trash2, Building2 } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { Card, SectionHeader, Button, Badge, IconButton, EmptyState } from '@/shared/ui'
+import { Card, SectionHeader, Button, Badge, IconButton, EmptyState, ConfirmDialog } from '@/shared/ui'
 import { useSeguridadData, seguridadActions } from '../data/seguridadStore'
 import { RolFormModal } from '../components/RolFormModal'
 import { AreaFormModal } from '../components/AreaFormModal'
 
 /**
  * Catálogo de roles y áreas del ERP. Crear rol: nombre libre + permisos por checkbox.
- * Editar rol existente: solo permisos (checkbox), el nombre no se toca. Áreas: solo alta,
- * nombre libre (ver PermisosPage para asignar rol+área a cada usuario).
+ * Editar rol existente: solo permisos (checkbox), el nombre no se toca. Áreas: alta,
+ * renombrar y baja, nombre libre (ver PermisosPage para asignar rol+área a cada usuario).
  */
 export default function RolesPage() {
   const { roles, areas } = useSeguridadData()
-  // undefined = modal cerrado, null = crear rol nuevo, objeto = editar permisos de ese rol
+  // undefined = modal cerrado, null = crear nuevo, objeto = editar ese registro
   const [rolEnEdicion, setRolEnEdicion] = useState(undefined)
-  // Se incrementa en cada apertura para forzar un remount de RolFormModal (ver su comentario)
+  const [areaEnEdicion, setAreaEnEdicion] = useState(undefined)
+  // Se incrementan en cada apertura para forzar un remount del modal (ver su comentario)
   // y que arranque limpio, sin necesitar un efecto que resetee el estado del formulario.
   const [modalToken, setModalToken] = useState(0)
-  const [areaModalAbierto, setAreaModalAbierto] = useState(false)
+  const [areaModalToken, setAreaModalToken] = useState(0)
+  // null = sin confirmación pendiente, objeto = registro esperando confirmar su borrado
+  const [rolPorEliminar, setRolPorEliminar] = useState(null)
+  const [areaPorEliminar, setAreaPorEliminar] = useState(null)
 
   const abrirModalRol = (rol) => {
     setRolEnEdicion(rol)
     setModalToken((token) => token + 1)
   }
 
+  const abrirModalArea = (area) => {
+    setAreaEnEdicion(area)
+    setAreaModalToken((token) => token + 1)
+  }
+
   const handleEliminarRol = (rol) => {
     seguridadActions.eliminarRol(rol.id)
     toast.info(`Rol "${rol.nombre}" eliminado.`)
+  }
+
+  const handleEliminarArea = (area) => {
+    seguridadActions.eliminarArea(area.id)
+    toast.info(`Área "${area.nombre}" eliminada.`)
   }
 
   return (
@@ -81,7 +95,7 @@ export default function RolesPage() {
                     <IconButton
                       icon={Trash2}
                       tone="danger"
-                      onClick={() => handleEliminarRol(rol)}
+                      onClick={() => setRolPorEliminar(rol)}
                       aria-label={`Eliminar ${rol.nombre}`}
                     />
                   </div>
@@ -96,7 +110,7 @@ export default function RolesPage() {
             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">
               Áreas ({areas.length})
             </h3>
-            <Button size="sm" variant="secondary" icon={Plus} onClick={() => setAreaModalAbierto(true)}>
+            <Button size="sm" variant="secondary" icon={Plus} onClick={() => abrirModalArea(null)}>
               Nueva área
             </Button>
           </div>
@@ -108,13 +122,29 @@ export default function RolesPage() {
               subtitle="Creá la primera con el botón de arriba."
             />
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <ul className="space-y-2.5">
               {areas.map((area) => (
-                <Badge key={area.id} variant="neutral">
-                  {area.nombre}
-                </Badge>
+                <li
+                  key={area.id}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white/60 p-4 shadow-xs backdrop-blur-sm"
+                >
+                  <p className="min-w-0 flex-1 font-semibold text-slate-800">{area.nombre}</p>
+                  <div className="flex shrink-0 gap-1">
+                    <IconButton
+                      icon={Pencil}
+                      onClick={() => abrirModalArea(area)}
+                      aria-label={`Editar ${area.nombre}`}
+                    />
+                    <IconButton
+                      icon={Trash2}
+                      tone="danger"
+                      onClick={() => setAreaPorEliminar(area)}
+                      aria-label={`Eliminar ${area.nombre}`}
+                    />
+                  </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </div>
       </Card>
@@ -125,7 +155,36 @@ export default function RolesPage() {
         onClose={() => setRolEnEdicion(undefined)}
         rol={rolEnEdicion || undefined}
       />
-      <AreaFormModal open={areaModalAbierto} onClose={() => setAreaModalAbierto(false)} />
+      <AreaFormModal
+        key={areaModalToken}
+        open={areaEnEdicion !== undefined}
+        onClose={() => setAreaEnEdicion(undefined)}
+        area={areaEnEdicion || undefined}
+      />
+
+      <ConfirmDialog
+        open={rolPorEliminar !== null}
+        onClose={() => setRolPorEliminar(null)}
+        onConfirm={() => handleEliminarRol(rolPorEliminar)}
+        title="Eliminar rol"
+        message={
+          rolPorEliminar
+            ? `Se eliminará el rol "${rolPorEliminar.nombre}". Los usuarios que lo tengan asignado quedarán sin rol.`
+            : ''
+        }
+      />
+
+      <ConfirmDialog
+        open={areaPorEliminar !== null}
+        onClose={() => setAreaPorEliminar(null)}
+        onConfirm={() => handleEliminarArea(areaPorEliminar)}
+        title="Eliminar área"
+        message={
+          areaPorEliminar
+            ? `Se eliminará el área "${areaPorEliminar.nombre}". Los usuarios que la tengan asignada quedarán sin área.`
+            : ''
+        }
+      />
     </>
   )
 }
