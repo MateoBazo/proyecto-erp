@@ -62,7 +62,7 @@ Paleta, tipografía y patrones de componentes (sidebar colapsable, tarjetas, bot
 - **Celeste** (`accent-500/400/300`, `#009ed0`/`#47b4d8`/`#a8daed`) — íconos, focos, resaltados (reemplaza el verde que tenía el proyecto antes).
 - **Colores de estado** (`state-success/warning/orange/danger`) — reservados para badges/indicadores, nunca estructurales.
 - **Tipografía:** Poppins (antes Inter).
-- **Escudo oficial GAMC** (`src/assets/escudo-gamc.png`) — reemplaza el logo genérico anterior en login, header y sidebar.
+- **Escudo oficial GAMC** — se usa en login, header y sidebar vía `BRAND.logoSrc` (`src/shared/branding/brand.js`). Para cambiarlo, reemplazá la única imagen dentro de `src/assets/branding/` por la nueva (cualquier nombre: `.png`/`.jpg`/`.svg`/`.webp`); `brand.js` la detecta sola, no se toca código.
 
 Estos tokens viven en `src/index.css` (`@theme`). Si el manual de marca cambia, actualizar ahí primero — todos los componentes (`Button`, `Sidebar`, `Badge`, etc.) heredan de esas variables, no hay colores sueltos por archivo.
 
