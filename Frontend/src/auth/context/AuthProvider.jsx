@@ -93,7 +93,7 @@ export function AuthProvider({ children }) {
             username: profile.usuario || session.user?.username || 'Usuario',
             email: profile.email || '',
             roles: profile.roles || [],
-            clientId: profile.client_id || session.user?.clientId || 'app-erp',
+            clientId: profile.client_id || session.user?.clientId || 'app-idec',
           })
           setToken(session.token)
           scheduleSilentRefresh(session.token)

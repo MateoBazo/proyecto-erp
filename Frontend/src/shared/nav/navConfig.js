@@ -1,4 +1,4 @@
-import { LayoutDashboard, Map, Camera, Layers } from 'lucide-react'
+import { LayoutDashboard, Map, Camera, Layers, ShieldCheck, Users, KeyRound } from 'lucide-react'
 
 /**
  * Árbol de navegación del ERP — fuente única de verdad para la grilla de módulos del home
@@ -25,6 +25,15 @@ export const NAV_SECTIONS = [
     children: [
       { label: 'Captura OCR', path: '/geoextraccion/captura', icon: Camera },
       { label: 'Fusión de Shapefiles', path: '/geoextraccion/fusion', icon: Layers },
+    ],
+  },
+  {
+    label: 'Seguridad',
+    icon: ShieldCheck,
+    path: '/seguridad',
+    children: [
+      { label: 'Permisos', path: '/seguridad/permisos', icon: Users },
+      { label: 'Roles', path: '/seguridad/roles', icon: KeyRound },
     ],
   },
 ]

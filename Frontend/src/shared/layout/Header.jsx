@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { LogOut, Menu, User } from 'lucide-react'
-import escudoGamc from '@/assets/escudo-gamc.png'
 import { Button } from '@/shared/ui'
+import { BRAND } from '@/shared/branding'
 import { ENV } from '@/core/config/env.config'
 import { PerfilModal } from './PerfilModal'
 
@@ -24,8 +24,8 @@ export function Header({ onLogout, onToggleSidebar, user }) {
           )}
 
           <img
-            src={escudoGamc}
-            alt="Escudo del Gobierno Autónomo Municipal de Cochabamba"
+            src={BRAND.logoSrc}
+            alt={BRAND.logoAlt}
             className="h-9 w-auto shrink-0"
           />
           <div>
