@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { LogOut, Menu, User } from 'lucide-react'
 import { Button } from '@/shared/ui'
 import { BRAND } from '@/shared/branding'
-import { ENV } from '@/core/config/env.config'
 import { PerfilModal } from './PerfilModal'
 
 export function Header({ onLogout, onToggleSidebar, user }) {
@@ -28,14 +27,6 @@ export function Header({ onLogout, onToggleSidebar, user }) {
             alt={BRAND.logoAlt}
             className="h-9 w-auto shrink-0"
           />
-          <div>
-            <span className="text-[11px] font-bold tracking-wider text-brand-600 uppercase">
-              {ENV.ORGANIZATION}
-            </span>
-            <h1 className="text-sm font-bold text-brand-900 sm:text-base">
-              {ENV.APP_NAME}
-            </h1>
-          </div>
         </div>
 
         <div className="flex items-center gap-2">
