@@ -1,3 +1,5 @@
+import watermarkEscudo from '@/assets/watermark/escudo-marca-agua.png'
+
 // Ruido fractal muy fino en SVG — técnica estándar para dar grano/textura a un fondo de
 // gradiente plano sin cargar una imagen. encodeURIComponent evita tener que escapar a mano
 // los caracteres especiales (#, %) del data URI.
@@ -12,10 +14,11 @@ const NOISE_DATA_URI = `data:image/svg+xml;utf8,${encodeURIComponent(NOISE_SVG)}
 
 /**
  * Fondo fijo de toda la app: gradiente institucional + textura sutil para dar perspectiva.
- * Tres capas por encima del gradiente, todas pointer-events-none y muy tenues para no competir
+ * Capas por encima del gradiente, todas pointer-events-none y muy tenues para no competir
  * con las cards de vidrio (glass) que se apoyan encima:
  *  - grano fino (ruido) — quita la planitud del gradiente liso
  *  - retícula — guiño cartográfico (dominio GIS) y da profundidad de "papel cuadriculado"
+ *  - escudo institucional centrado — marca de agua, apenas visible detrás del contenido
  *  - viñeta radial — oscurece apenas las esquinas, sensación de foco/perspectiva
  */
 export function GisBackdrop() {
@@ -31,6 +34,13 @@ export function GisBackdrop() {
           backgroundImage:
             'linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)',
           backgroundSize: '64px 64px',
+        }}
+      />
+      <div
+        className="absolute inset-0 bg-no-repeat bg-center opacity-[0.09]"
+        style={{
+          backgroundImage: `url("${watermarkEscudo}")`,
+          backgroundSize: 'min(70vw, 70vh) auto',
         }}
       />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(10,13,18,0.14)_100%)]" />
