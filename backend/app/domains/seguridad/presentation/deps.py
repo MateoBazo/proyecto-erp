@@ -1,10 +1,12 @@
 from functools import lru_cache
-from fastapi import Depends, Security
+from typing import Optional
+from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.domains.seguridad.domain.ports.auth_provider_port import AuthProviderPort
 from app.domains.seguridad.domain.ports.user_repository_port import UserRepositoryPort
+from app.domains.seguridad.domain.ports.rbac_admin_repository_port import RbacAdminRepositoryPort
 from app.domains.seguridad.domain.ports.directory_provider_port import DirectoryProviderPort
 from app.domains.seguridad.domain.entities.user import UserProfile
 from app.domains.seguridad.application.use_cases import (
@@ -15,12 +17,23 @@ from app.domains.seguridad.application.use_cases import (
     SyncUserRbacUseCase,
     ChangePasswordUseCase,
     ResetInstitutionalPasswordUseCase,
+    ListRolesUseCase,
+    CreateRolUseCase,
+    SetRolPermisosUseCase,
+    DeleteRolUseCase,
+    ListAreasUseCase,
+    CreateAreaUseCase,
+    UpdateAreaUseCase,
+    DeleteAreaUseCase,
+    ListUsuariosAsignacionUseCase,
+    AsignarRolAreaUseCase,
 )
 from app.domains.seguridad.infrastructure.keycloak_adapter import KeycloakAdapter
 from app.domains.seguridad.infrastructure.zentyal_ldap_adapter import ZentyalLdapAdapter
 from app.core.security.jwks_service import JWKSService
 from app.core.database.connection import get_db
 from app.domains.seguridad.infrastructure.sql_user_repository import SqlUserRepository
+from app.domains.seguridad.infrastructure.sql_rbac_admin_repository import SqlRbacAdminRepository
 
 # Mecanismo de extracción de cabecera Bearer
 security = HTTPBearer()
@@ -108,3 +121,98 @@ def get_current_user(
     """
     token = credentials.credentials
     return verify_use_case.execute(token)
+
+
+def get_current_usuario_id(
+    current_user: UserProfile = Depends(get_current_user),
+    user_repository: UserRepositoryPort = Depends(get_user_repository),
+) -> Optional[str]:
+    """
+    Id interno (tabla 'usuario') del usuario autenticado, o None si todavía no tiene
+    fila propia (p. ej. nunca hizo login por credenciales, que es lo único que hoy
+    dispara SyncUserRbacUseCase — ver presentation/endpoints/auth.py). Se usa para dejar
+    constancia de quién hizo una escritura administrativa (CLAUDE.md §9).
+    """
+    entity = user_repository.get_by_keycloak_sub(current_user.sub) if current_user.sub else None
+    return entity.id_usuario if entity else None
+
+
+# --- Administración RBAC (roles, áreas, asignación usuario-rol-área) --------------------
+
+
+def get_rbac_admin_repository(db: Session = Depends(get_db)) -> RbacAdminRepositoryPort:
+    return SqlRbacAdminRepository(db=db)
+
+
+def get_list_roles_use_case(repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository)) -> ListRolesUseCase:
+    return ListRolesUseCase(repository=repo)
+
+
+def get_create_rol_use_case(repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository)) -> CreateRolUseCase:
+    return CreateRolUseCase(repository=repo)
+
+
+def get_set_rol_permisos_use_case(
+    repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository),
+) -> SetRolPermisosUseCase:
+    return SetRolPermisosUseCase(repository=repo)
+
+
+def get_delete_rol_use_case(repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository)) -> DeleteRolUseCase:
+    return DeleteRolUseCase(repository=repo)
+
+
+def get_list_areas_use_case(repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository)) -> ListAreasUseCase:
+    return ListAreasUseCase(repository=repo)
+
+
+def get_create_area_use_case(repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository)) -> CreateAreaUseCase:
+    return CreateAreaUseCase(repository=repo)
+
+
+def get_update_area_use_case(repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository)) -> UpdateAreaUseCase:
+    return UpdateAreaUseCase(repository=repo)
+
+
+def get_delete_area_use_case(repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository)) -> DeleteAreaUseCase:
+    return DeleteAreaUseCase(repository=repo)
+
+
+def get_list_usuarios_asignacion_use_case(
+    repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository),
+) -> ListUsuariosAsignacionUseCase:
+    return ListUsuariosAsignacionUseCase(repository=repo)
+
+
+def get_asignar_rol_area_use_case(
+    repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository),
+) -> AsignarRolAreaUseCase:
+    return AsignarRolAreaUseCase(repository=repo)
+
+
+def require_permission(codigo: str):
+    """
+    Fábrica de dependencia de FastAPI: exige que el usuario autenticado tenga el permiso
+    'codigo' (formato 'recurso.accion', ej. 'geoextraccion.editar') entre los que le
+    otorgan sus roles asignados en usuario_rol_area. Uso: `Depends(require_permission("x.y"))`.
+
+    Esta es la primera vez que el backend resuelve una decisión de autorización real a
+    partir del modelo RBAC interno en vez del rol de Keycloak (CLAUDE.md §5). Se expone
+    también desde contracts/ (ver contracts/authorization.py) para que otros dominios
+    puedan protegerse con el mismo mecanismo sin importar nada de las capas internas de
+    seguridad — CLAUDE.md §2.
+    """
+
+    def _dependency(
+        current_user: UserProfile = Depends(get_current_user),
+        user_repository: UserRepositoryPort = Depends(get_user_repository),
+    ) -> UserProfile:
+        permisos = user_repository.get_user_permissions(current_user.sub) if current_user.sub else []
+        if codigo not in permisos:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"No tenés el permiso '{codigo}' para realizar esta acción.",
+            )
+        return current_user
+
+    return _dependency

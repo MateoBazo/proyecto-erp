@@ -5,6 +5,18 @@ from app.domains.seguridad.application.use_cases.verify_token_use_case import Ve
 from app.domains.seguridad.application.use_cases.sync_user_rbac_use_case import SyncUserRbacUseCase
 from app.domains.seguridad.application.use_cases.change_password_use_case import ChangePasswordUseCase
 from app.domains.seguridad.application.use_cases.reset_institutional_password_use_case import ResetInstitutionalPasswordUseCase
+from app.domains.seguridad.application.use_cases.rbac_admin_use_cases import (
+    ListRolesUseCase,
+    CreateRolUseCase,
+    SetRolPermisosUseCase,
+    DeleteRolUseCase,
+    ListAreasUseCase,
+    CreateAreaUseCase,
+    UpdateAreaUseCase,
+    DeleteAreaUseCase,
+    ListUsuariosAsignacionUseCase,
+    AsignarRolAreaUseCase,
+)
 
 __all__ = [
     "AuthenticateDomainUseCase",
@@ -14,4 +26,14 @@ __all__ = [
     "SyncUserRbacUseCase",
     "ChangePasswordUseCase",
     "ResetInstitutionalPasswordUseCase",
+    "ListRolesUseCase",
+    "CreateRolUseCase",
+    "SetRolPermisosUseCase",
+    "DeleteRolUseCase",
+    "ListAreasUseCase",
+    "CreateAreaUseCase",
+    "UpdateAreaUseCase",
+    "DeleteAreaUseCase",
+    "ListUsuariosAsignacionUseCase",
+    "AsignarRolAreaUseCase",
 ]

@@ -39,3 +39,27 @@ class UserEntity:
     correo: Optional[str] = None
     activo: bool = True
     roles: List[RoleEntity] = field(default_factory=list)
+
+
+@dataclass
+class AreaEntity:
+    """Entidad de dominio para un área (tabla area) — el 'alcance' con el que se asigna
+    un rol_interno a un usuario (usuario_rol_area, ver CLAUDE.md §5)."""
+    id_area: Optional[str]
+    nombre: str
+    tipo: Optional[str] = None
+
+
+@dataclass
+class UsuarioAsignacionEntity:
+    """Vista de un usuario junto con su asignación actual de rol + área (usuario_rol_area).
+    El esquema real permite varias filas por usuario (varios rol+área a la vez), pero esta
+    entidad representa una única asignación 'activa' por usuario — la pantalla de admin de
+    CLAUDE.md §10 asume un rol y un área a la vez por usuario, no un set de asignaciones."""
+    id_usuario: str
+    username: str
+    correo: Optional[str]
+    rol_id: Optional[str] = None
+    rol_nombre: Optional[str] = None
+    area_id: Optional[str] = None
+    area_nombre: Optional[str] = None

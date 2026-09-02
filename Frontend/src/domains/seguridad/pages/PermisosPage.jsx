@@ -1,17 +1,85 @@
-import { Users } from 'lucide-react'
-import { Card, SectionHeader, Select, EmptyState } from '@/shared/ui'
+import { useState } from 'react'
+import { RefreshCw, Users } from 'lucide-react'
+import { toast } from 'react-toastify'
+import { Card, SectionHeader, Select, EmptyState, Alert, Spinner } from '@/shared/ui'
 import { useSeguridadData, seguridadActions } from '../data/seguridadStore'
 
 /**
  * Lista de usuarios con su rol y área actuales, editables mediante selects que solo
  * ofrecen los roles/áreas que ya existen (se crean en RolesPage) — nunca texto libre acá.
+ *
+ * `usuario_rol_area` exige rol_id y area_id juntos (ambos NOT NULL en la base real, ver
+ * CLAUDE.md §6) — no existe una asignación con uno solo de los dos. Como acá son dos
+ * selects independientes, la elección se junta en `pendientes` (estado local, no
+ * persistido) y solo se manda al backend cuando el par queda completo o completamente
+ * vacío (desasignar). Elegir uno solo del par se muestra pendiente hasta completar el otro.
  */
 export default function PermisosPage() {
-  const { usuarios, roles, areas } = useSeguridadData()
+  const { usuarios, roles, areas, loading, error } = useSeguridadData()
+  const [pendientes, setPendientes] = useState({})
+  const [recargando, setRecargando] = useState(false)
+
+  const handleRecargar = async () => {
+    setRecargando(true)
+    try {
+      await seguridadActions.recargar()
+    } finally {
+      setRecargando(false)
+    }
+  }
+
+  const valoresDe = (usuario) => pendientes[usuario.id] ?? { rolId: usuario.rolId, areaId: usuario.areaId }
+
+  const handleCambiar = async (usuario, campo, valor) => {
+    const siguiente = { ...valoresDe(usuario), [campo]: valor }
+    setPendientes((p) => ({ ...p, [usuario.id]: siguiente }))
+
+    const completo = Boolean(siguiente.rolId) === Boolean(siguiente.areaId)
+    if (!completo) return
+
+    try {
+      await seguridadActions.asignarRolArea(usuario.id, siguiente)
+    } catch (err) {
+      toast.error(err.message || 'No se pudo actualizar la asignación.')
+    } finally {
+      setPendientes((p) => {
+        const { [usuario.id]: _omit, ...resto } = p
+        return resto
+      })
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card className="flex items-center justify-center gap-2 py-16 text-slate-500">
+        <Spinner /> Cargando usuarios…
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <Alert type="error" title="No se pudieron cargar los usuarios" message={error.message} />
+      </Card>
+    )
+  }
 
   return (
     <Card>
-      <SectionHeader icon={Users} eyebrow="Roles" title="Permisos de usuarios" />
+      <div className="flex items-start justify-between gap-3">
+        <SectionHeader icon={Users} eyebrow="Roles" title="Permisos de usuarios" className="flex-1" />
+        <button
+          type="button"
+          onClick={handleRecargar}
+          disabled={recargando}
+          title="Vuelve a pedir la lista de usuarios al backend (por si alguien se logueó recién)"
+          className="mt-1 flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${recargando ? 'animate-spin' : ''}`} />
+          Recargar
+        </button>
+      </div>
 
       {usuarios.length === 0 ? (
         <EmptyState icon={Users} title="No hay usuarios para mostrar" />
@@ -27,50 +95,52 @@ export default function PermisosPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {usuarios.map((usuario) => (
-                <tr key={usuario.id} className="bg-white/60">
-                  <td className="px-4 py-3 font-mono font-medium text-slate-800">{usuario.username}</td>
-                  <td className="px-4 py-3 text-slate-600">{usuario.email}</td>
-                  <td className="px-4 py-3">
-                    <Select
-                      value={usuario.rolId || ''}
-                      onChange={(event) =>
-                        seguridadActions.asignarRolArea(usuario.id, {
-                          rolId: event.target.value,
-                          areaId: usuario.areaId,
-                        })
-                      }
-                      containerClassName="min-w-[160px]"
-                    >
-                      <option value="">Sin rol</option>
-                      {roles.map((rol) => (
-                        <option key={rol.id} value={rol.id}>
-                          {rol.nombre}
-                        </option>
-                      ))}
-                    </Select>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Select
-                      value={usuario.areaId || ''}
-                      onChange={(event) =>
-                        seguridadActions.asignarRolArea(usuario.id, {
-                          rolId: usuario.rolId,
-                          areaId: event.target.value,
-                        })
-                      }
-                      containerClassName="min-w-[160px]"
-                    >
-                      <option value="">Sin área</option>
-                      {areas.map((area) => (
-                        <option key={area.id} value={area.id}>
-                          {area.nombre}
-                        </option>
-                      ))}
-                    </Select>
-                  </td>
-                </tr>
-              ))}
+              {usuarios.map((usuario) => {
+                const valores = valoresDe(usuario)
+                const pendienteRol = Boolean(valores.areaId) && !valores.rolId
+                const pendienteArea = Boolean(valores.rolId) && !valores.areaId
+
+                return (
+                  <tr key={usuario.id} className="bg-white/60">
+                    <td className="px-4 py-3 font-mono font-medium text-slate-800">{usuario.username}</td>
+                    <td className="px-4 py-3 text-slate-600">{usuario.email}</td>
+                    <td className="px-4 py-3">
+                      <Select
+                        value={valores.rolId || ''}
+                        onChange={(event) => handleCambiar(usuario, 'rolId', event.target.value)}
+                        containerClassName="min-w-[160px]"
+                      >
+                        <option value="">Sin rol</option>
+                        {roles.map((rol) => (
+                          <option key={rol.id} value={rol.id}>
+                            {rol.nombre}
+                          </option>
+                        ))}
+                      </Select>
+                      {pendienteRol && (
+                        <p className="mt-1 text-xs text-amber-600">Elegí también un rol para guardar.</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Select
+                        value={valores.areaId || ''}
+                        onChange={(event) => handleCambiar(usuario, 'areaId', event.target.value)}
+                        containerClassName="min-w-[160px]"
+                      >
+                        <option value="">Sin área</option>
+                        {areas.map((area) => (
+                          <option key={area.id} value={area.id}>
+                            {area.nombre}
+                          </option>
+                        ))}
+                      </Select>
+                      {pendienteArea && (
+                        <p className="mt-1 text-xs text-amber-600">Elegí también un área para guardar.</p>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

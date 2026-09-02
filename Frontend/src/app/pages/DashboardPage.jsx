@@ -1,11 +1,8 @@
 import { NavLink } from 'react-router-dom'
 import { LayoutGrid, UserRound } from 'lucide-react'
-import { Card, Badge } from '@/shared/ui'
+import { Card, Badge, EmptyState } from '@/shared/ui'
 import { useAuth } from '@/auth/hooks/useAuth'
-import { NAV_SECTIONS } from '@/shared/nav'
-
-// Todo lo que no sea "Inicio" se muestra como acceso directo a un dominio del ERP.
-const MODULES = NAV_SECTIONS.filter((section) => section.path !== '/dashboard')
+import { NAV_SECTIONS, puedeVerModulo } from '@/shared/nav'
 
 function ModuleTile({ label, path, icon: Icon }) {
   return (
@@ -33,6 +30,11 @@ export function DashboardPage() {
 
   const displayName = user?.username || 'Usuario'
   const roles = user?.roles || []
+  // Solo los módulos que el rol interno asignado habilita (CLAUDE.md §5) — sin rol
+  // asignado, `user.permisos` viene vacío y no se muestra ningún módulo.
+  const modules = NAV_SECTIONS.filter(
+    (section) => section.path !== '/dashboard' && puedeVerModulo(user?.permisos, section)
+  )
 
   return (
     <>
@@ -68,11 +70,19 @@ export function DashboardPage() {
           </h3>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {MODULES.map((module) => (
-            <ModuleTile key={module.path} {...module} />
-          ))}
-        </div>
+        {modules.length === 0 ? (
+          <EmptyState
+            icon={LayoutGrid}
+            title="Todavía no tenés ningún módulo asignado"
+            subtitle="Pedile a un administrador que te asigne un rol y un área en Seguridad → Permisos."
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {modules.map((module) => (
+              <ModuleTile key={module.path} {...module} />
+            ))}
+          </div>
+        )}
       </Card>
     </>
   )

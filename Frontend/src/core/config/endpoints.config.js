@@ -18,4 +18,13 @@ export const API_ENDPOINTS = {
     GENERAR_SHAPEFILE: '/api/geoextraccion/shapefiles',
     FUSIONAR_SHAPEFILES: '/api/geoextraccion/shapefiles/fusiones',
   },
+  SEGURIDAD: {
+    ROLES: '/api/seguridad/roles',
+    ROL_PERMISOS: (rolId) => `/api/seguridad/roles/${rolId}/permisos`,
+    ROL: (rolId) => `/api/seguridad/roles/${rolId}`,
+    AREAS: '/api/seguridad/areas',
+    AREA: (areaId) => `/api/seguridad/areas/${areaId}`,
+    USUARIOS: '/api/seguridad/usuarios',
+    USUARIO_ASIGNACION: (usuarioId) => `/api/seguridad/usuarios/${usuarioId}/asignacion`,
+  },
 }

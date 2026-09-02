@@ -1,18 +1,15 @@
-import { useSyncExternalStore } from 'react'
-import { ROLES_INICIALES, AREAS_INICIALES, USUARIOS_INICIALES } from './mockSeguridad'
+import { useEffect, useSyncExternalStore } from 'react'
+import { seguridadApi } from '../api/seguridad.api'
 
 /**
- * Store en memoria del dominio seguridad — mock local mientras no exista el backend real
- * (roles, áreas y usuario_rol_area en la base). Vive como singleton de módulo, fuera del
- * árbol de React, para que PermisosPage y RolesPage compartan el mismo estado aunque el
- * router desmonte una página al navegar a la otra. Se pierde al recargar la pestaña — es
- * intencional, es solo para poder trabajar el front antes de que el backend exista.
+ * Store del dominio seguridad — vive como singleton de módulo, fuera del árbol de React,
+ * para que PermisosPage y RolesPage compartan el mismo estado (roles/áreas/usuarios) aunque
+ * el router desmonte una página al navegar a la otra. Se recarga desde el backend real
+ * (backend/app/domains/seguridad, ver seguridad.api.js) al primer montaje; se pierde al
+ * recargar la pestaña, que es correcto: el backend es la fuente de verdad.
  */
-let state = {
-  roles: ROLES_INICIALES,
-  areas: AREAS_INICIALES,
-  usuarios: USUARIOS_INICIALES,
-}
+let state = { roles: [], areas: [], usuarios: [], loading: true, error: null }
+let cargaIniciada = false
 const listeners = new Set()
 
 function setState(updater) {
@@ -25,22 +22,57 @@ function subscribe(listener) {
   return () => listeners.delete(listener)
 }
 
+async function cargar() {
+  setState(() => ({ loading: true, error: null }))
+  try {
+    const [roles, areas, usuarios] = await Promise.all([
+      seguridadApi.listarRoles(),
+      seguridadApi.listarAreas(),
+      seguridadApi.listarUsuarios(),
+    ])
+    setState(() => ({ roles, areas, usuarios, loading: false }))
+  } catch (error) {
+    setState(() => ({ loading: false, error }))
+  }
+}
+
+function recargar() {
+  return cargar()
+}
+
 export function useSeguridadData() {
-  return useSyncExternalStore(subscribe, () => state)
+  const data = useSyncExternalStore(subscribe, () => state)
+
+  useEffect(() => {
+    if (!cargaIniciada) {
+      cargaIniciada = true
+      cargar()
+    }
+  }, [])
+
+  return data
 }
 
 export const seguridadActions = {
-  crearRol(nombre, permisos = []) {
-    setState((s) => ({
-      roles: [...s.roles, { id: crypto.randomUUID(), nombre, permisos }],
-    }))
+  // Vuelve a pedir roles/áreas/usuarios al backend. Necesario porque `cargar()` solo se
+  // dispara sola una vez por pestaña (ver comentario de arriba): si un usuario nuevo se
+  // loguea al ERP mientras esta pantalla ya está abierta, no aparece hasta refrescar.
+  recargar,
+
+  async crearRol(nombre, permisos = []) {
+    const rol = await seguridadApi.crearRol(nombre, permisos)
+    setState((s) => ({ roles: [...s.roles, rol] }))
+    return rol
   },
-  actualizarPermisosRol(rolId, permisos) {
-    setState((s) => ({
-      roles: s.roles.map((r) => (r.id === rolId ? { ...r, permisos } : r)),
-    }))
+
+  async actualizarPermisosRol(rolId, permisos) {
+    const rol = await seguridadApi.actualizarPermisosRol(rolId, permisos)
+    setState((s) => ({ roles: s.roles.map((r) => (r.id === rolId ? rol : r)) }))
+    return rol
   },
-  eliminarRol(rolId) {
+
+  async eliminarRol(rolId) {
+    await seguridadApi.eliminarRol(rolId)
     setState((s) => ({
       roles: s.roles.filter((r) => r.id !== rolId),
       // Limpia el rol de cualquier usuario que lo tuviera asignado para no dejar
@@ -48,17 +80,21 @@ export const seguridadActions = {
       usuarios: s.usuarios.map((u) => (u.rolId === rolId ? { ...u, rolId: '' } : u)),
     }))
   },
-  crearArea(nombre) {
-    setState((s) => ({
-      areas: [...s.areas, { id: crypto.randomUUID(), nombre }],
-    }))
+
+  async crearArea(nombre) {
+    const area = await seguridadApi.crearArea(nombre)
+    setState((s) => ({ areas: [...s.areas, area] }))
+    return area
   },
-  actualizarArea(areaId, nombre) {
-    setState((s) => ({
-      areas: s.areas.map((a) => (a.id === areaId ? { ...a, nombre } : a)),
-    }))
+
+  async actualizarArea(areaId, nombre) {
+    const area = await seguridadApi.actualizarArea(areaId, nombre)
+    setState((s) => ({ areas: s.areas.map((a) => (a.id === areaId ? area : a)) }))
+    return area
   },
-  eliminarArea(areaId) {
+
+  async eliminarArea(areaId) {
+    await seguridadApi.eliminarArea(areaId)
     setState((s) => ({
       areas: s.areas.filter((a) => a.id !== areaId),
       // Limpia el área de cualquier usuario que la tuviera asignada para no dejar
@@ -66,9 +102,10 @@ export const seguridadActions = {
       usuarios: s.usuarios.map((u) => (u.areaId === areaId ? { ...u, areaId: '' } : u)),
     }))
   },
-  asignarRolArea(usuarioId, { rolId, areaId }) {
-    setState((s) => ({
-      usuarios: s.usuarios.map((u) => (u.id === usuarioId ? { ...u, rolId, areaId } : u)),
-    }))
+
+  async asignarRolArea(usuarioId, { rolId, areaId }) {
+    const usuario = await seguridadApi.asignarRolArea(usuarioId, { rolId, areaId })
+    setState((s) => ({ usuarios: s.usuarios.map((u) => (u.id === usuarioId ? usuario : u)) }))
+    return usuario
   },
 }

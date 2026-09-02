@@ -10,6 +10,28 @@ const REFRESH_MARGIN_MS = 60_000
 // Piso de seguridad: nunca reintentar más seguido que esto (evita loops si expires_in es muy corto)
 const MIN_REFRESH_DELAY_MS = 5_000
 
+/**
+ * Arma el objeto `user` completo (incluidos los `permisos` RBAC) pidiéndoselo al backend
+ * (/api/private) — el JWT de Keycloak por sí solo (ver extractUserFromToken) no trae
+ * `permisos`, esos solo los resuelve el backend contra usuario_rol_area/rol_permiso. Se usa
+ * tanto al montar como después de un login o de un refresh de token, para que `permisos`
+ * nunca quede desactualizado ni pisado por la versión "liviana" derivada del JWT.
+ */
+async function fetchUserProfile(token, fallbackUsername) {
+  const profile = await userService.getProfile(token)
+  return {
+    username: profile.usuario || fallbackUsername || 'Usuario',
+    email: profile.email || '',
+    roles: profile.roles || [],
+    clientId: profile.client_id || 'app-idec',
+    idUsuario: profile.id_usuario || null,
+    // Permisos RBAC internos (rol_interno -> rol_permiso -> permiso), no confundir
+    // con `roles` de arriba (roles de Keycloak — nunca deciden autorización de
+    // negocio directamente, CLAUDE.md §5).
+    permisos: profile.permisos || [],
+  }
+}
+
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => authService.getCurrentSession().token)
   const [user, setUser] = useState(() => authService.getCurrentSession().user)
@@ -43,7 +65,13 @@ export function AuthProvider({ children }) {
         try {
           const result = await authService.refreshSession()
           setToken(result.access_token)
-          setUser((prev) => result.user || prev)
+          try {
+            setUser(await fetchUserProfile(result.access_token, result.user?.username))
+          } catch {
+            // El perfil no se pudo repedir (ej. backend caído un instante): se mantiene
+            // el usuario actual en vez de pisarlo con la versión sin `permisos` del JWT.
+            setUser((prev) => prev || result.user)
+          }
           scheduleSilentRefreshRef.current(result.access_token)
         } catch {
           // El refresh_token también expiró o no hay conectividad: se deja que la
@@ -87,14 +115,9 @@ export function AuthProvider({ children }) {
       }
 
       try {
-        const profile = await userService.getProfile(session.token)
+        const fullUser = await fetchUserProfile(session.token, session.user?.username)
         if (isMounted) {
-          setUser({
-            username: profile.usuario || session.user?.username || 'Usuario',
-            email: profile.email || '',
-            roles: profile.roles || [],
-            clientId: profile.client_id || session.user?.clientId || 'app-idec',
-          })
+          setUser(fullUser)
           setToken(session.token)
           scheduleSilentRefresh(session.token)
         }
@@ -129,7 +152,14 @@ export function AuthProvider({ children }) {
     async ({ username, password }) => {
       const result = await authService.login({ username, password })
       setToken(result.access_token)
-      setUser(result.user)
+      try {
+        setUser(await fetchUserProfile(result.access_token, result.user?.username))
+      } catch {
+        // El perfil (con `permisos`) no se pudo pedir todavía: se usa el usuario liviano
+        // derivado del JWT como antes — sin `permisos`, no verá ningún módulo hasta que
+        // el próximo refresh silencioso (o un reload) logre traer el perfil completo.
+        setUser(result.user)
+      }
       scheduleSilentRefresh(result.access_token)
       return result
     },

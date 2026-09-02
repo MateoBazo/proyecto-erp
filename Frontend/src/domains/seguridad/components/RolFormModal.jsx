@@ -18,7 +18,9 @@ export function RolFormModal({ open, onClose, rol }) {
   const [nombre, setNombre] = useState(rol?.nombre || '')
   const [permisos, setPermisos] = useState(rol?.permisos || [])
 
-  const handleSubmit = (event) => {
+  const [enviando, setEnviando] = useState(false)
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     if (!isEdicion && !nombre.trim()) {
@@ -26,15 +28,21 @@ export function RolFormModal({ open, onClose, rol }) {
       return
     }
 
-    if (isEdicion) {
-      seguridadActions.actualizarPermisosRol(rol.id, permisos)
-      toast.success(`Permisos de "${rol.nombre}" actualizados.`)
-    } else {
-      seguridadActions.crearRol(nombre.trim(), permisos)
-      toast.success(`Rol "${nombre.trim()}" creado.`)
+    setEnviando(true)
+    try {
+      if (isEdicion) {
+        await seguridadActions.actualizarPermisosRol(rol.id, permisos)
+        toast.success(`Permisos de "${rol.nombre}" actualizados.`)
+      } else {
+        await seguridadActions.crearRol(nombre.trim(), permisos)
+        toast.success(`Rol "${nombre.trim()}" creado.`)
+      }
+      onClose()
+    } catch (error) {
+      toast.error(error.message || 'No se pudo guardar el rol.')
+    } finally {
+      setEnviando(false)
     }
-
-    onClose()
   }
 
   return (
@@ -61,10 +69,12 @@ export function RolFormModal({ open, onClose, rol }) {
         </div>
 
         <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={enviando}>
             Cancelar
           </Button>
-          <Button type="submit">{isEdicion ? 'Guardar permisos' : 'Crear rol'}</Button>
+          <Button type="submit" disabled={enviando}>
+            {enviando ? 'Guardando…' : isEdicion ? 'Guardar permisos' : 'Crear rol'}
+          </Button>
         </div>
       </form>
     </Modal>

@@ -1,4 +1,4 @@
-import { MODULOS_ERP, ACCIONES } from '../data/mockSeguridad'
+import { MODULOS_ERP, ACCIONES } from '../data/catalogoModulos'
 
 /**
  * Checklist de permisos agrupado por módulo del ERP. Es la única forma de asignar
