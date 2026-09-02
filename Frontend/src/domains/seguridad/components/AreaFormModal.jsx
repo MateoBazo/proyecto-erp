@@ -15,7 +15,9 @@ export function AreaFormModal({ open, onClose, area }) {
   const isEdicion = Boolean(area)
   const [nombre, setNombre] = useState(area?.nombre || '')
 
-  const handleSubmit = (event) => {
+  const [enviando, setEnviando] = useState(false)
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     const limpio = nombre.trim()
@@ -24,15 +26,21 @@ export function AreaFormModal({ open, onClose, area }) {
       return
     }
 
-    if (isEdicion) {
-      seguridadActions.actualizarArea(area.id, limpio)
-      toast.success(`Área "${limpio}" actualizada.`)
-    } else {
-      seguridadActions.crearArea(limpio)
-      toast.success(`Área "${limpio}" creada.`)
+    setEnviando(true)
+    try {
+      if (isEdicion) {
+        await seguridadActions.actualizarArea(area.id, limpio)
+        toast.success(`Área "${limpio}" actualizada.`)
+      } else {
+        await seguridadActions.crearArea(limpio)
+        toast.success(`Área "${limpio}" creada.`)
+      }
+      onClose()
+    } catch (error) {
+      toast.error(error.message || 'No se pudo guardar el área.')
+    } finally {
+      setEnviando(false)
     }
-
-    onClose()
   }
 
   return (
@@ -47,10 +55,12 @@ export function AreaFormModal({ open, onClose, area }) {
         />
 
         <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={enviando}>
             Cancelar
           </Button>
-          <Button type="submit">{isEdicion ? 'Guardar cambios' : 'Crear área'}</Button>
+          <Button type="submit" disabled={enviando}>
+            {enviando ? 'Guardando…' : isEdicion ? 'Guardar cambios' : 'Crear área'}
+          </Button>
         </div>
       </form>
     </Modal>

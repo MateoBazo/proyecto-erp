@@ -67,3 +67,17 @@ export function getCurrentDomain(pathname) {
     ) ?? null
   )
 }
+
+/**
+ * True si `permisos` (códigos 'modulo.accion' del usuario autenticado, ver
+ * AuthProvider — vienen de seguridad.usuario_rol_area -> rol_permiso -> permiso) habilita
+ * el módulo de `section`. El id de módulo es `section.path` sin la barra inicial — el
+ * mismo criterio que ya usa el checklist de permisos de un rol
+ * (domains/seguridad/data/catalogoModulos.js) para no desincronizarse con él. Un usuario
+ * sin ningún rol asignado tiene `permisos: []` y por lo tanto no puede ver ningún módulo.
+ */
+export function puedeVerModulo(permisos, section) {
+  if (!section) return false
+  const moduloId = section.path.replace('/', '')
+  return (permisos || []).some((codigo) => codigo.startsWith(`${moduloId}.`))
+}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { KeyRound, Plus, Pencil, Trash2, Building2 } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { Card, SectionHeader, Button, Badge, IconButton, EmptyState, ConfirmDialog } from '@/shared/ui'
+import { Card, SectionHeader, Button, Badge, IconButton, EmptyState, ConfirmDialog, Alert, Spinner } from '@/shared/ui'
 import { useSeguridadData, seguridadActions } from '../data/seguridadStore'
 import { RolFormModal } from '../components/RolFormModal'
 import { AreaFormModal } from '../components/AreaFormModal'
@@ -12,7 +12,7 @@ import { AreaFormModal } from '../components/AreaFormModal'
  * renombrar y baja, nombre libre (ver PermisosPage para asignar rol+área a cada usuario).
  */
 export default function RolesPage() {
-  const { roles, areas } = useSeguridadData()
+  const { roles, areas, loading, error } = useSeguridadData()
   // undefined = modal cerrado, null = crear nuevo, objeto = editar ese registro
   const [rolEnEdicion, setRolEnEdicion] = useState(undefined)
   const [areaEnEdicion, setAreaEnEdicion] = useState(undefined)
@@ -34,14 +34,38 @@ export default function RolesPage() {
     setAreaModalToken((token) => token + 1)
   }
 
-  const handleEliminarRol = (rol) => {
-    seguridadActions.eliminarRol(rol.id)
-    toast.info(`Rol "${rol.nombre}" eliminado.`)
+  const handleEliminarRol = async (rol) => {
+    try {
+      await seguridadActions.eliminarRol(rol.id)
+      toast.info(`Rol "${rol.nombre}" eliminado.`)
+    } catch (error) {
+      toast.error(error.message || 'No se pudo eliminar el rol.')
+    }
   }
 
-  const handleEliminarArea = (area) => {
-    seguridadActions.eliminarArea(area.id)
-    toast.info(`Área "${area.nombre}" eliminada.`)
+  const handleEliminarArea = async (area) => {
+    try {
+      await seguridadActions.eliminarArea(area.id)
+      toast.info(`Área "${area.nombre}" eliminada.`)
+    } catch (error) {
+      toast.error(error.message || 'No se pudo eliminar el área.')
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card className="flex items-center justify-center gap-2 py-16 text-slate-500">
+        <Spinner /> Cargando roles y áreas…
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <Alert type="error" title="No se pudieron cargar roles y áreas" message={error.message} />
+      </Card>
+    )
   }
 
   return (
