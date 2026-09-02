@@ -125,7 +125,7 @@ Routing por **paths** dentro de un solo SPA (`erp.dominio.bo/catastro/...`), no 
 - Keycloak: identidad, credenciales, sesión SSO, emisión de JWT, rol global grueso opcional (informativo).
 - Backend (Postgres, schema `seguridad`): TODOS los permisos finos — por módulo, recurso y acción. Modelo RBAC con `alcance` opcional para casos con contexto (no ABAC completo salvo necesidad real y demostrada).
 
-Flujo: frontend redirige a Keycloak (Authorization Code + PKCE) → backend valida el JWT en cada request (firma, `exp`, `aud`, `iss` vía JWKS) → resuelve `usuarios.keycloak_id = JWT.sub` (crea el usuario en el primer login, sin roles por defecto) → resuelve permisos internos → autoriza o rechaza.
+Flujo: frontend redirige a Keycloak (Authorization Code + PKCE) → backend valida el JWT en cada request (firma, `exp`, `aud`, `iss` vía JWKS) → resuelve `usuarios.keycloak_id = JWT.sub` (crea el usuario en el primer login y lo asigna a un punto de partida fijo — área "Catastro" + rol "Inicio", ver `SqlUserRepository.ensure_user_exists`, no elegido en base a nada de Keycloak) → resuelve permisos internos → autoriza o rechaza.
 
 **Nunca** tomar una decisión de autorización de negocio a partir del rol de Keycloak directamente. El rol de Keycloak no es un permiso.
 
@@ -227,9 +227,11 @@ ser peligroso (crea tablas "huérfanas" con nombres distintos en vez de avisar d
 - Si la jerarquía `sistema` → `subsistema` → `recurso` de la base real de `seguridad`
   corresponde 1:1 al concepto de "dominio" usado en el resto de este documento
   (Catastro, Seguridad, Documentación...) — no asumir que son lo mismo.
-- Pantalla de administración para asignar rol + área a un usuario (`usuario_rol_area`).
-  Hoy no existe ninguna — un usuario autenticado por Keycloak queda sin permisos hasta
-  que alguien se lo asigne manualmente (directo en la base, por ahora).
+- Pantalla de administración para asignar rol + área a un usuario (`usuario_rol_area`):
+  existe (`Frontend/src/domains/seguridad/pages/PermisosPage.jsx`, ventana emergente por
+  usuario). Un usuario nuevo ya no arranca sin permisos: se asigna automáticamente a
+  área "Catastro" + rol "Inicio" en el primer login (`SqlUserRepository.ensure_user_exists`);
+  esa pantalla sigue sirviendo para cambiarle la asignación después.
 - Qué hacer con logins sin identidad individual (token sin `sub` — hoy pasa con las
   credenciales de `admin-cli`/realm `master` usadas para pruebas, o con el flujo de
   "dominio institucional"). Por ahora todos comparten un único usuario `Institucional`

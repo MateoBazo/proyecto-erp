@@ -1,72 +1,9 @@
--- =========================================================================
--- Script de creación de base de datos — ERP Catastro (Alcaldía)
--- =========================================================================
--- Genera desde cero, en un servidor PostgreSQL nuevo, la base `gis_seguridad`
--- tal como existe HOY en el servidor real (172.16.66.103), reflejando fielmente
--- `ecosistema_seguridad_backup.sql` (fuente de verdad, dumpeada con
--- `pg_dump --schema-only` el 2026-08-31 por el equipo de base de datos).
---
--- Este script NO "corrige" ni reordena el esquema real (mover tablas a un
--- schema `seguridad` propio, agregar fecha_creacion/actualizacion faltantes,
--- eliminar las 4 tablas legacy `usuarios`/`roles`/`permisos`/`usuario_rol`).
--- CLAUDE.md §6 es explícito: esos cambios los decide el equipo de base de
--- datos, no el backend por su cuenta — "la base manda, el backend se adapta".
---
--- Sí agrega, al final, el patrón para que la base pueda CRECER con el resto
--- del ERP sin tocar lo existente: un schema de PostgreSQL separado por cada
--- dominio nuevo (Catastro, Documentación, ...), como pide CLAUDE.md §6. No
--- se crean tablas de negocio de Catastro acá — el catálogo de módulos todavía
--- no está definido (CLAUDE.md §10: "no inventar").
---
--- Cómo correrlo:
---   1) Como superusuario, conectado a la base `postgres` (no a `gis_seguridad`):
---        psql -h <host> -U <superusuario> -d postgres -f database_setup.sql
---      CREATE DATABASE no puede ir dentro de una transacción ni ejecutarse
---      estando conectado a la misma base que se crea — por eso ese bloque
---      queda separado y hay que correrlo primero si la base no existe todavía.
---   2) Si `gis_seguridad` YA existe en el servidor (como en 172.16.66.103),
---      saltar la sección 1 y correr el resto conectado a esa base:
---        psql -h <host> -U <usuario> -d gis_seguridad -f database_setup.sql
--- =========================================================================
-
-
--- =========================================================================
--- 1) Creación de la base de datos (correr una sola vez, conectado a `postgres`)
--- =========================================================================
--- Comentado por defecto: en el servidor real la base ya existe. Descomentar
--- solo al levantar un servidor PostgreSQL nuevo (ej. entorno local).
-
--- CREATE DATABASE gis_seguridad
---     WITH ENCODING = 'UTF8'
---     LC_COLLATE = 'en_US.UTF-8'
---     LC_CTYPE = 'en_US.UTF-8'
---     TEMPLATE = template0;
-
--- Conectate a la base antes de seguir (en psql):
--- \c gis_seguridad
-
-
--- =========================================================================
--- 2) Extensiones
--- =========================================================================
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
 
--- =========================================================================
--- 3) Esquema real de `seguridad` (schema public) — copiado tal cual de
---    ecosistema_seguridad_backup.sql. No editar acá: si el equipo de base de
---    datos cambia algo, se actualiza primero ese archivo y después este.
--- =========================================================================
-
 SET default_tablespace = '';
 SET default_table_access_method = heap;
-
--- ⚠️ Incluye 4 tablas legacy (usuarios, roles, permisos, usuario_rol) que NO
--- usa el ORM ni el resto del backend (ver nota completa en
--- ecosistema_seguridad_backup.sql). No se eliminan acá sin confirmación del
--- equipo de base de datos.
 
 CREATE TABLE public.area (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -321,36 +258,4 @@ ALTER TABLE ONLY public.usuario_rol
     ADD CONSTRAINT usuario_rol_id_rol_fkey FOREIGN KEY (id_rol) REFERENCES public.roles(id_rol) ON DELETE CASCADE;
 ALTER TABLE ONLY public.usuario_rol
     ADD CONSTRAINT usuario_rol_id_usuario_fkey FOREIGN KEY (id_usuario) REFERENCES public.usuarios(id_usuario) ON DELETE CASCADE;
-
-
--- =========================================================================
--- 4) Patrón de extensión para los próximos dominios del ERP (CLAUDE.md §6:
---    "un schema de PostgreSQL por dominio"). Plantilla, no ejecuta nada.
--- =========================================================================
--- Cuando exista un caso de uso real que lo justifique (CLAUDE.md §10 — no
--- inventar tablas antes de tiempo), el próximo dominio de negocio (ej.
--- Catastro) sigue este patrón:
---
---   CREATE SCHEMA IF NOT EXISTS catastro;
---
---   CREATE TABLE catastro.<entidad_plural> (
---       id_<entidad> uuid DEFAULT gen_random_uuid() PRIMARY KEY,
---       -- columnas propias del caso de uso real --
---       activo boolean DEFAULT true,               -- soft delete si la tabla
---                                                    -- tiene relevancia legal
---       fecha_creacion timestamp without time zone DEFAULT now(),
---       fecha_actualizacion timestamp without time zone DEFAULT now()
---   );
---
---   CREATE INDEX ON catastro.<entidad_plural> (activo);
---   -- + un índice por cada FK de la tabla
---
--- Reglas fijas (CLAUDE.md §2 y §6), no negociables por conveniencia puntual:
---   * Nunca JOIN cross-schema hacia otro dominio (ni siquiera de solo lectura).
---   * Nunca FK desde una tabla de `catastro` hacia una tabla de otro dominio.
---     Si dos dominios necesitan compartir un dato, ese concepto sube a `core`.
---   * Cada permiso nuevo (`catastro.<recurso>.<accion>`) es una fila en
---     `public.permiso` (vía `recurso` → `subsistema` → `sistema`), enlazada a
---     los roles de `rol_interno` que correspondan en `rol_permiso` — nunca un
---     permiso chequeado solo en código sin fila en la tabla.
--- =========================================================================
+    
