@@ -37,7 +37,7 @@ export function GisBackdrop() {
         }}
       />
       <div
-        className="absolute inset-x-0 bottom-0 h-[45vh] bg-no-repeat bg-bottom opacity-[0.09]"
+        className="absolute inset-0 bg-no-repeat bg-bottom opacity-[0.09]"
         style={{
           backgroundImage: `url("${watermarkCocha}")`,
           backgroundSize: 'min(100vw, 1800px) auto',
