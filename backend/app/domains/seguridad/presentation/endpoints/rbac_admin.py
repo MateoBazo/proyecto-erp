@@ -32,6 +32,7 @@ from app.domains.seguridad.presentation.schemas.rbac_admin_schema import (
     RolOut,
     RolCreateRequest,
     RolPermisosUpdateRequest,
+    RolResumenOut,
     AreaOut,
     AreaCreateRequest,
     AreaUpdateRequest,
@@ -69,8 +70,7 @@ def _usuario_to_out(entity) -> UsuarioAsignacionOut:
         id=entity.id_usuario,
         username=entity.username,
         correo=entity.correo,
-        rol_id=entity.rol_id,
-        rol_nombre=entity.rol_nombre,
+        roles=[RolResumenOut(id=rol.id_rol, nombre=rol.nombre) for rol in entity.roles],
         area_id=entity.area_id,
         area_nombre=entity.area_nombre,
     )
@@ -175,5 +175,5 @@ def asignar_rol_area(
     actor_id: Optional[str] = Depends(get_current_usuario_id),
     use_case: AsignarRolAreaUseCase = Depends(get_asignar_rol_area_use_case),
 ):
-    resultado = use_case.execute(usuario_id, payload.rol_id, payload.area_id, actor_id)
+    resultado = use_case.execute(usuario_id, payload.rol_ids, payload.area_id, actor_id)
     return _usuario_to_out(resultado)

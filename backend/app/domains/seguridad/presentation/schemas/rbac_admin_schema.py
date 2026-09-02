@@ -36,18 +36,24 @@ class AreaUpdateRequest(BaseModel):
     nombre: str = Field(..., min_length=1, max_length=100)
 
 
+class RolResumenOut(BaseModel):
+    """Rol asignado a un usuario, sin sus permisos (esos se editan en RolesPage)."""
+    id: str
+    nombre: str
+
+
 class UsuarioAsignacionOut(BaseModel):
     id: str
     username: str
     correo: Optional[str] = None
-    rol_id: Optional[str] = None
-    rol_nombre: Optional[str] = None
+    roles: List[RolResumenOut] = Field(default_factory=list)
     area_id: Optional[str] = None
     area_nombre: Optional[str] = None
 
 
 class AsignarRolAreaRequest(BaseModel):
-    """rol_id y area_id se envían juntos o ambos vacíos: la base no admite un rol sin
-    área ni viceversa (CLAUDE.md §6)."""
-    rol_id: Optional[str] = None
+    """rol_ids y area_id se envían juntos o ambos vacíos: la base no admite un rol sin
+    área ni viceversa (CLAUDE.md §6). rol_ids puede tener más de un rol — todos quedan
+    bajo la misma área."""
+    rol_ids: List[str] = Field(default_factory=list)
     area_id: Optional[str] = None

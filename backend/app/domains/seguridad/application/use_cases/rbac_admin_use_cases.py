@@ -91,8 +91,8 @@ class AsignarRolAreaUseCase:
     def execute(
         self,
         usuario_id: str,
-        rol_id: Optional[str],
+        rol_ids: List[str],
         area_id: Optional[str],
         actor_usuario_id: Optional[str],
     ) -> UsuarioAsignacionEntity:
-        return self._repository.asignar_rol_area(usuario_id, rol_id, area_id, actor_usuario_id)
+        return self._repository.asignar_rol_area(usuario_id, rol_ids, area_id, actor_usuario_id)

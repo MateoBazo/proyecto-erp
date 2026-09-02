@@ -52,14 +52,14 @@ class AreaEntity:
 
 @dataclass
 class UsuarioAsignacionEntity:
-    """Vista de un usuario junto con su asignación actual de rol + área (usuario_rol_area).
-    El esquema real permite varias filas por usuario (varios rol+área a la vez), pero esta
-    entidad representa una única asignación 'activa' por usuario — la pantalla de admin de
-    CLAUDE.md §10 asume un rol y un área a la vez por usuario, no un set de asignaciones."""
+    """Vista de un usuario junto con su asignación actual de roles + área (usuario_rol_area).
+    El esquema real permite varias filas por usuario (varios rol+área a la vez); esta entidad
+    ahora sí lo refleja: varios roles a la vez, todos bajo una misma área (un usuario tiene
+    una sola área activa, pero puede tener N roles dentro de ella — una fila usuario_rol_area
+    por rol seleccionado, todas con el mismo area_id)."""
     id_usuario: str
     username: str
     correo: Optional[str]
-    rol_id: Optional[str] = None
-    rol_nombre: Optional[str] = None
+    roles: List[RoleEntity] = field(default_factory=list)
     area_id: Optional[str] = None
     area_nombre: Optional[str] = None

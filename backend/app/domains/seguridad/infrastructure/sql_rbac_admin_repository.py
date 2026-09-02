@@ -138,7 +138,7 @@ class SqlRbacAdminRepository(RbacAdminRepositoryPort):
     def asignar_rol_area(
         self,
         usuario_id: str,
-        rol_id: Optional[str],
+        rol_ids: List[str],
         area_id: Optional[str],
         actor_usuario_id: Optional[str],
     ) -> UsuarioAsignacionEntity:
@@ -148,8 +148,9 @@ class SqlRbacAdminRepository(RbacAdminRepositoryPort):
 
         self._db.query(UsuarioRolAreaModel).filter(UsuarioRolAreaModel.usuario_id == usuario_id).delete()
 
-        if rol_id and area_id:
-            self._db.add(UsuarioRolAreaModel(usuario_id=usuario.id, rol_id=rol_id, area_id=area_id))
+        if area_id:
+            for rol_id in dict.fromkeys(rol_ids):  # dedupe preservando orden
+                self._db.add(UsuarioRolAreaModel(usuario_id=usuario.id, rol_id=rol_id, area_id=area_id))
 
         self._db.commit()
         self._audit(
@@ -264,13 +265,16 @@ class SqlRbacAdminRepository(RbacAdminRepositoryPort):
 
     @staticmethod
     def _usuario_to_entity(usuario: UsuarioModel) -> UsuarioAsignacionEntity:
-        asignacion = usuario.asignaciones[0] if usuario.asignaciones else None
+        asignaciones = [a for a in usuario.asignaciones if a.rol]
+        primera = asignaciones[0] if asignaciones else None
         return UsuarioAsignacionEntity(
             id_usuario=str(usuario.id),
             username=usuario.username,
             correo=usuario.correo,
-            rol_id=str(asignacion.rol_id) if asignacion else None,
-            rol_nombre=asignacion.rol.nombre if asignacion and asignacion.rol else None,
-            area_id=str(asignacion.area_id) if asignacion else None,
-            area_nombre=asignacion.area.nombre if asignacion and asignacion.area else None,
+            roles=[
+                RoleEntity(id_rol=str(a.rol_id), nombre=a.rol.nombre, activo=a.rol.activo)
+                for a in asignaciones
+            ],
+            area_id=str(primera.area_id) if primera else None,
+            area_nombre=primera.area.nombre if primera and primera.area else None,
         )
