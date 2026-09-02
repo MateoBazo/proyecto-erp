@@ -1,4 +1,4 @@
-import watermarkEscudo from '@/assets/watermark/escudo-marca-agua.png'
+import watermarkCocha from '@/assets/watermark/cocha-skyline-color.png'
 
 // Ruido fractal muy fino en SVG — técnica estándar para dar grano/textura a un fondo de
 // gradiente plano sin cargar una imagen. encodeURIComponent evita tener que escapar a mano
@@ -18,7 +18,7 @@ const NOISE_DATA_URI = `data:image/svg+xml;utf8,${encodeURIComponent(NOISE_SVG)}
  * con las cards de vidrio (glass) que se apoyan encima:
  *  - grano fino (ruido) — quita la planitud del gradiente liso
  *  - retícula — guiño cartográfico (dominio GIS) y da profundidad de "papel cuadriculado"
- *  - escudo institucional centrado — marca de agua, apenas visible detrás del contenido
+ *  - skyline de Cochabamba pegado abajo — marca de agua a modo de "suelo", apenas visible
  *  - viñeta radial — oscurece apenas las esquinas, sensación de foco/perspectiva
  */
 export function GisBackdrop() {
@@ -37,10 +37,10 @@ export function GisBackdrop() {
         }}
       />
       <div
-        className="absolute inset-0 bg-no-repeat bg-center opacity-[0.09]"
+        className="absolute inset-x-0 bottom-0 h-[45vh] bg-no-repeat bg-bottom opacity-[0.09]"
         style={{
-          backgroundImage: `url("${watermarkEscudo}")`,
-          backgroundSize: 'min(70vw, 70vh) auto',
+          backgroundImage: `url("${watermarkCocha}")`,
+          backgroundSize: 'min(100vw, 1800px) auto',
         }}
       />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(10,13,18,0.14)_100%)]" />
