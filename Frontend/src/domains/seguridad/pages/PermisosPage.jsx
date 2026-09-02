@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { RefreshCw, Users } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { RefreshCw, Search, Users } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { Card, SectionHeader, Select, EmptyState, Alert, Spinner } from '@/shared/ui'
+import { Card, SectionHeader, Select, Input, EmptyState, Alert, Spinner } from '@/shared/ui'
 import { useSeguridadData, seguridadActions } from '../data/seguridadStore'
 
 /**
@@ -18,6 +18,24 @@ export default function PermisosPage() {
   const { usuarios, roles, areas, loading, error } = useSeguridadData()
   const [pendientes, setPendientes] = useState({})
   const [recargando, setRecargando] = useState(false)
+  const [busqueda, setBusqueda] = useState('')
+  const [rolFiltro, setRolFiltro] = useState('')
+
+  const usuariosFiltrados = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase()
+
+    return usuarios.filter((usuario) => {
+      const valores = pendientes[usuario.id] ?? { rolId: usuario.rolId, areaId: usuario.areaId }
+
+      if (rolFiltro && String(valores.rolId || '') !== rolFiltro) return false
+
+      if (!termino) return true
+      return (
+        usuario.username?.toLowerCase().includes(termino) ||
+        usuario.email?.toLowerCase().includes(termino)
+      )
+    })
+  }, [usuarios, pendientes, busqueda, rolFiltro])
 
   const handleRecargar = async () => {
     setRecargando(true)
@@ -84,66 +102,98 @@ export default function PermisosPage() {
       {usuarios.length === 0 ? (
         <EmptyState icon={Users} title="No hay usuarios para mostrar" />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200/70">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Usuario</th>
-                <th className="px-4 py-3">Correo</th>
-                <th className="px-4 py-3">Rol</th>
-                <th className="px-4 py-3">Área</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {usuarios.map((usuario) => {
-                const valores = valoresDe(usuario)
-                const pendienteRol = Boolean(valores.areaId) && !valores.rolId
-                const pendienteArea = Boolean(valores.rolId) && !valores.areaId
+        <>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+            <Input
+              icon={Search}
+              placeholder="Buscar por usuario o correo…"
+              value={busqueda}
+              onChange={(event) => setBusqueda(event.target.value)}
+              containerClassName="flex-1"
+            />
+            <Select
+              value={rolFiltro}
+              onChange={(event) => setRolFiltro(event.target.value)}
+              containerClassName="sm:w-56"
+            >
+              <option value="">Todos los roles</option>
+              {roles.map((rol) => (
+                <option key={rol.id} value={rol.id}>
+                  {rol.nombre}
+                </option>
+              ))}
+            </Select>
+          </div>
 
-                return (
-                  <tr key={usuario.id} className="bg-white/60">
-                    <td className="px-4 py-3 font-mono font-medium text-slate-800">{usuario.username}</td>
-                    <td className="px-4 py-3 text-slate-600">{usuario.email}</td>
-                    <td className="px-4 py-3">
-                      <Select
-                        value={valores.rolId || ''}
-                        onChange={(event) => handleCambiar(usuario, 'rolId', event.target.value)}
-                        containerClassName="min-w-[160px]"
-                      >
-                        <option value="">Sin rol</option>
-                        {roles.map((rol) => (
-                          <option key={rol.id} value={rol.id}>
-                            {rol.nombre}
-                          </option>
-                        ))}
-                      </Select>
-                      {pendienteRol && (
-                        <p className="mt-1 text-xs text-amber-600">Elegí también un rol para guardar.</p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Select
-                        value={valores.areaId || ''}
-                        onChange={(event) => handleCambiar(usuario, 'areaId', event.target.value)}
-                        containerClassName="min-w-[160px]"
-                      >
-                        <option value="">Sin área</option>
-                        {areas.map((area) => (
-                          <option key={area.id} value={area.id}>
-                            {area.nombre}
-                          </option>
-                        ))}
-                      </Select>
-                      {pendienteArea && (
-                        <p className="mt-1 text-xs text-amber-600">Elegí también un área para guardar.</p>
-                      )}
-                    </td>
+          {usuariosFiltrados.length === 0 ? (
+            <EmptyState
+              icon={Search}
+              title="Ningún usuario coincide con el filtro"
+              className="py-12"
+            />
+          ) : (
+            <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200/70">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3">Usuario</th>
+                    <th className="px-4 py-3">Correo</th>
+                    <th className="px-4 py-3">Rol</th>
+                    <th className="px-4 py-3">Área</th>
                   </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {usuariosFiltrados.map((usuario) => {
+                    const valores = valoresDe(usuario)
+                    const pendienteRol = Boolean(valores.areaId) && !valores.rolId
+                    const pendienteArea = Boolean(valores.rolId) && !valores.areaId
+
+                    return (
+                      <tr key={usuario.id} className="bg-white/60">
+                        <td className="px-4 py-3 font-mono font-medium text-slate-800">{usuario.username}</td>
+                        <td className="px-4 py-3 text-slate-600">{usuario.email}</td>
+                        <td className="px-4 py-3">
+                          <Select
+                            value={valores.rolId || ''}
+                            onChange={(event) => handleCambiar(usuario, 'rolId', event.target.value)}
+                            containerClassName="min-w-[160px]"
+                          >
+                            <option value="">Sin rol</option>
+                            {roles.map((rol) => (
+                              <option key={rol.id} value={rol.id}>
+                                {rol.nombre}
+                              </option>
+                            ))}
+                          </Select>
+                          {pendienteRol && (
+                            <p className="mt-1 text-xs text-amber-600">Elegí también un rol para guardar.</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Select
+                            value={valores.areaId || ''}
+                            onChange={(event) => handleCambiar(usuario, 'areaId', event.target.value)}
+                            containerClassName="min-w-[160px]"
+                          >
+                            <option value="">Sin área</option>
+                            {areas.map((area) => (
+                              <option key={area.id} value={area.id}>
+                                {area.nombre}
+                              </option>
+                            ))}
+                          </Select>
+                          {pendienteArea && (
+                            <p className="mt-1 text-xs text-amber-600">Elegí también un área para guardar.</p>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </Card>
   )

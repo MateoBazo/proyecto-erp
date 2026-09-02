@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { LayoutGrid, UserRound } from 'lucide-react'
-import { Card, Badge, EmptyState } from '@/shared/ui'
+import { Card, EmptyState } from '@/shared/ui'
 import { useAuth } from '@/auth/hooks/useAuth'
 import { NAV_SECTIONS, puedeVerModulo } from '@/shared/nav'
 
@@ -29,7 +29,6 @@ export function DashboardPage() {
   const { user } = useAuth()
 
   const displayName = user?.username || 'Usuario'
-  const roles = user?.roles || []
   // Solo los módulos que el rol interno asignado habilita (CLAUDE.md §5) — sin rol
   // asignado, `user.permisos` viene vacío y no se muestra ningún módulo.
   const modules = NAV_SECTIONS.filter(
@@ -50,16 +49,6 @@ export function DashboardPage() {
             <h2 className="text-lg font-bold text-slate-900">{displayName}</h2>
           </div>
         </div>
-
-        {roles.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {roles.map((role) => (
-              <Badge key={role} variant="accent">
-                {role}
-              </Badge>
-            ))}
-          </div>
-        )}
       </Card>
 
       <Card>
