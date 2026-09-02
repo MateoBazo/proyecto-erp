@@ -66,13 +66,15 @@ class RbacAdminRepositoryPort(ABC):
     def asignar_rol_area(
         self,
         usuario_id: str,
-        rol_id: Optional[str],
+        rol_ids: List[str],
         area_id: Optional[str],
         actor_usuario_id: Optional[str],
     ) -> UsuarioAsignacionEntity:
         """
-        Reemplaza la asignación rol+área de un usuario por la indicada. Si rol_id o area_id
-        vienen vacíos, el usuario queda sin asignación (la base exige ambos juntos o ninguno:
-        no existe usuario_rol_area sin área, CLAUDE.md §6).
+        Reemplaza la asignación de un usuario por la indicada: una fila usuario_rol_area por
+        cada rol_id en rol_ids, todas con el mismo area_id (varios roles pueden convivir en
+        una misma área). Si rol_ids viene vacío o area_id no viene, el usuario queda sin
+        asignación (la base exige ambos juntos o ninguno: no existe usuario_rol_area sin
+        área, CLAUDE.md §6).
         """
         pass

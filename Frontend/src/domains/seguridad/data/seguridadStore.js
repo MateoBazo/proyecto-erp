@@ -76,8 +76,8 @@ export const seguridadActions = {
     setState((s) => ({
       roles: s.roles.filter((r) => r.id !== rolId),
       // Limpia el rol de cualquier usuario que lo tuviera asignado para no dejar
-      // referencias colgadas (PermisosPage lo mostraría como "Sin rol").
-      usuarios: s.usuarios.map((u) => (u.rolId === rolId ? { ...u, rolId: '' } : u)),
+      // referencias colgadas (PermisosPage ya no lo listaría entre sus roles).
+      usuarios: s.usuarios.map((u) => ({ ...u, rolIds: u.rolIds.filter((id) => id !== rolId) })),
     }))
   },
 
@@ -103,8 +103,8 @@ export const seguridadActions = {
     }))
   },
 
-  async asignarRolArea(usuarioId, { rolId, areaId }) {
-    const usuario = await seguridadApi.asignarRolArea(usuarioId, { rolId, areaId })
+  async asignarRolArea(usuarioId, { rolIds, areaId }) {
+    const usuario = await seguridadApi.asignarRolArea(usuarioId, { rolIds, areaId })
     setState((s) => ({ usuarios: s.usuarios.map((u) => (u.id === usuarioId ? usuario : u)) }))
     return usuario
   },

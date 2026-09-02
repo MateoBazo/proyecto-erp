@@ -3,16 +3,20 @@ import { RefreshCw, Search, Users } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { Card, SectionHeader, Select, Input, EmptyState, Alert, Spinner } from '@/shared/ui'
 import { useSeguridadData, seguridadActions } from '../data/seguridadStore'
+import { UsuarioRolesCheckboxes } from '../components/UsuarioRolesCheckboxes'
 
 /**
- * Lista de usuarios con su rol y área actuales, editables mediante selects que solo
- * ofrecen los roles/áreas que ya existen (se crean en RolesPage) — nunca texto libre acá.
+ * Lista de usuarios con sus roles y área actuales. El área es un select (un usuario tiene
+ * una sola área activa a la vez); los roles son checkboxes — un usuario puede tener varios
+ * roles a la vez dentro de esa área. Ambos solo ofrecen roles/áreas que ya existen (se
+ * crean en RolesPage), nunca texto libre acá.
  *
  * `usuario_rol_area` exige rol_id y area_id juntos (ambos NOT NULL en la base real, ver
- * CLAUDE.md §6) — no existe una asignación con uno solo de los dos. Como acá son dos
- * selects independientes, la elección se junta en `pendientes` (estado local, no
- * persistido) y solo se manda al backend cuando el par queda completo o completamente
- * vacío (desasignar). Elegir uno solo del par se muestra pendiente hasta completar el otro.
+ * CLAUDE.md §6) — no existe una asignación con uno solo de los dos: se persiste una fila
+ * por rol marcado, todas con la misma área. Como acá son dos controles independientes
+ * (checkboxes de roles + select de área), la elección se junta en `pendientes` (estado
+ * local, no persistido) y solo se manda al backend cuando el conjunto queda completo
+ * (al menos un rol + un área) o completamente vacío (desasignar todo).
  */
 export default function PermisosPage() {
   const { usuarios, roles, areas, loading, error } = useSeguridadData()
@@ -25,9 +29,9 @@ export default function PermisosPage() {
     const termino = busqueda.trim().toLowerCase()
 
     return usuarios.filter((usuario) => {
-      const valores = pendientes[usuario.id] ?? { rolId: usuario.rolId, areaId: usuario.areaId }
+      const valores = pendientes[usuario.id] ?? { rolIds: usuario.rolIds, areaId: usuario.areaId }
 
-      if (rolFiltro && String(valores.rolId || '') !== rolFiltro) return false
+      if (rolFiltro && !valores.rolIds.includes(rolFiltro)) return false
 
       if (!termino) return true
       return (
@@ -46,13 +50,13 @@ export default function PermisosPage() {
     }
   }
 
-  const valoresDe = (usuario) => pendientes[usuario.id] ?? { rolId: usuario.rolId, areaId: usuario.areaId }
+  const valoresDe = (usuario) => pendientes[usuario.id] ?? { rolIds: usuario.rolIds, areaId: usuario.areaId }
 
   const handleCambiar = async (usuario, campo, valor) => {
     const siguiente = { ...valoresDe(usuario), [campo]: valor }
     setPendientes((p) => ({ ...p, [usuario.id]: siguiente }))
 
-    const completo = Boolean(siguiente.rolId) === Boolean(siguiente.areaId)
+    const completo = (siguiente.rolIds.length > 0) === Boolean(siguiente.areaId)
     if (!completo) return
 
     try {
@@ -138,35 +142,28 @@ export default function PermisosPage() {
                   <tr>
                     <th className="px-4 py-3">Usuario</th>
                     <th className="px-4 py-3">Correo</th>
-                    <th className="px-4 py-3">Rol</th>
+                    <th className="px-4 py-3">Roles</th>
                     <th className="px-4 py-3">Área</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {usuariosFiltrados.map((usuario) => {
                     const valores = valoresDe(usuario)
-                    const pendienteRol = Boolean(valores.areaId) && !valores.rolId
-                    const pendienteArea = Boolean(valores.rolId) && !valores.areaId
+                    const pendienteRol = Boolean(valores.areaId) && valores.rolIds.length === 0
+                    const pendienteArea = valores.rolIds.length > 0 && !valores.areaId
 
                     return (
                       <tr key={usuario.id} className="bg-white/60">
                         <td className="px-4 py-3 font-mono font-medium text-slate-800">{usuario.username}</td>
                         <td className="px-4 py-3 text-slate-600">{usuario.email}</td>
                         <td className="px-4 py-3">
-                          <Select
-                            value={valores.rolId || ''}
-                            onChange={(event) => handleCambiar(usuario, 'rolId', event.target.value)}
-                            containerClassName="min-w-[160px]"
-                          >
-                            <option value="">Sin rol</option>
-                            {roles.map((rol) => (
-                              <option key={rol.id} value={rol.id}>
-                                {rol.nombre}
-                              </option>
-                            ))}
-                          </Select>
+                          <UsuarioRolesCheckboxes
+                            roles={roles}
+                            rolIds={valores.rolIds}
+                            onChange={(rolIds) => handleCambiar(usuario, 'rolIds', rolIds)}
+                          />
                           {pendienteRol && (
-                            <p className="mt-1 text-xs text-amber-600">Elegí también un rol para guardar.</p>
+                            <p className="mt-1 text-xs text-amber-600">Marcá también un rol para guardar.</p>
                           )}
                         </td>
                         <td className="px-4 py-3">

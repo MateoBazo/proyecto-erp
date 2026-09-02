@@ -193,7 +193,7 @@ export default function RolesPage() {
         title="Eliminar rol"
         message={
           rolPorEliminar
-            ? `Se eliminará el rol "${rolPorEliminar.nombre}". Los usuarios que lo tengan asignado quedarán sin rol.`
+            ? `Se eliminará el rol "${rolPorEliminar.nombre}". Los usuarios que lo tengan asignado perderán ese rol (conservan los demás que tengan).`
             : ''
         }
       />

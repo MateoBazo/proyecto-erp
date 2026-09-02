@@ -21,7 +21,7 @@ function mapUsuario(usuario) {
     id: usuario.id,
     username: usuario.username,
     email: usuario.correo || '',
-    rolId: usuario.rol_id || '',
+    rolIds: (usuario.roles || []).map((rol) => rol.id),
     areaId: usuario.area_id || '',
   }
 }
@@ -62,9 +62,9 @@ function listarUsuarios() {
   return httpClient.get(ENDPOINTS.USUARIOS).then((usuarios) => usuarios.map(mapUsuario))
 }
 
-function asignarRolArea(usuarioId, { rolId, areaId }) {
+function asignarRolArea(usuarioId, { rolIds, areaId }) {
   return httpClient
-    .put(ENDPOINTS.USUARIO_ASIGNACION(usuarioId), { rol_id: rolId || null, area_id: areaId || null })
+    .put(ENDPOINTS.USUARIO_ASIGNACION(usuarioId), { rol_ids: rolIds || [], area_id: areaId || null })
     .then(mapUsuario)
 }
 
