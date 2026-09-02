@@ -70,8 +70,9 @@ class RecursoModel(Base):
 
 
 class UsuarioModel(Base):
-    """`keycloak_sub` es el vínculo con JWT.sub (CLAUDE.md §5). Un usuario nuevo se crea
-    sin filas en usuario_rol_area — "sin roles por defecto" (CLAUDE.md §5)."""
+    """`keycloak_sub` es el vínculo con JWT.sub (CLAUDE.md §5). Un usuario nuevo arranca
+    con una fila en usuario_rol_area — área "Catastro" + rol "Inicio" — asignada por
+    SqlUserRepository.ensure_user_exists, no elegida en base a nada de Keycloak."""
     __tablename__ = "usuario"
 
     id = _uuid_pk()

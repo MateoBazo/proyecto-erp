@@ -15,8 +15,10 @@ class SyncUserRbacUseCase:
 
     No asigna roles a partir de los roles de Keycloak: CLAUDE.md §5 es explícito en que
     nunca se toma una decisión de autorización de negocio a partir del rol de Keycloak
-    directamente, y un usuario se crea "sin roles por defecto". Asignar rol + área es un
-    paso manual aparte (pantalla de administración todavía no construida, CLAUDE.md §10).
+    directamente. Lo que sí hace (delegado en SqlUserRepository.ensure_user_exists) es
+    darle a todo usuario nuevo un punto de partida fijo — área "Catastro" + rol "Inicio",
+    no elegido en base a nada de Keycloak — en vez de dejarlo sin ningún permiso hasta que
+    un admin se lo asigne a mano desde PermisosPage.
 
     Caso "institucional": cuando el token no trae 'sub' (p. ej. un token de tipo
     client_credentials, o de una cuenta de Keycloak que no representa a una persona —
