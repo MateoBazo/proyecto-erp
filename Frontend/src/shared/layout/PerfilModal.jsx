@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/solid'
 import { KeyRound } from 'lucide-react'
-import { Modal, Button, Input, Alert, Badge } from '@/shared/ui'
+import { Modal, Button, Input, Alert } from '@/shared/ui'
 import { validateChangePasswordForm } from '@/shared/utils/validation.util'
 import { userService } from '@/auth/services/user.service'
 
@@ -86,14 +86,6 @@ export function PerfilModal({ open, onClose, user }) {
           {user?.email && <p className="truncate text-xs text-slate-500">{user.email}</p>}
         </div>
       </div>
-
-      {Array.isArray(user?.roles) && user.roles.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {user.roles.map((rol) => (
-            <Badge key={rol} variant="accent">{rol}</Badge>
-          ))}
-        </div>
-      )}
 
       <div className="mt-5 border-t border-slate-100 pt-5">
         {!showForm ? (
