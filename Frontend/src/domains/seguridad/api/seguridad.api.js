@@ -5,7 +5,7 @@ const ENDPOINTS = API_ENDPOINTS.SEGURIDAD
 
 /**
  * Adaptadores entre la forma de la API real (backend/app/domains/seguridad,
- * campos en snake_case) y la forma que ya esperan RolesPage/PermisosPage/los modales
+ * campos en snake_case) y la forma que ya esperan RolesPage/UsuariosPage/los modales
  * (heredada del store mock que reemplaza este cliente, ver seguridadStore.js).
  */
 function mapRol(rol) {
@@ -23,6 +23,7 @@ function mapUsuario(usuario) {
     email: usuario.correo || '',
     rolIds: (usuario.roles || []).map((rol) => rol.id),
     areaId: usuario.area_id || '',
+    activo: usuario.activo !== false,
   }
 }
 
@@ -68,6 +69,15 @@ function asignarRolArea(usuarioId, { rolIds, areaId }) {
     .then(mapUsuario)
 }
 
+/**
+ * Activa/desactiva un usuario (usuario.activo) en vez de borrarlo — CLAUDE.md §6 pide
+ * soft delete para usuarios. Un usuario inactivo no puede volver a iniciar sesión
+ * (lo rechaza el backend en /login y en cada request, ver deps.get_current_user).
+ */
+function actualizarEstadoUsuario(usuarioId, activo) {
+  return httpClient.put(ENDPOINTS.USUARIO_ESTADO(usuarioId), { activo }).then(mapUsuario)
+}
+
 export const seguridadApi = {
   listarRoles,
   crearRol,
@@ -79,4 +89,5 @@ export const seguridadApi = {
   eliminarArea,
   listarUsuarios,
   asignarRolArea,
+  actualizarEstadoUsuario,
 }

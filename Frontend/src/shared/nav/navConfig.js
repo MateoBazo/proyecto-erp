@@ -32,7 +32,7 @@ export const NAV_SECTIONS = [
     icon: ShieldCheck,
     path: '/seguridad',
     children: [
-      { label: 'Permisos', path: '/seguridad/permisos', icon: Users },
+      { label: 'Usuarios', path: '/seguridad/usuarios', icon: Users },
       { label: 'Roles', path: '/seguridad/roles', icon: KeyRound },
     ],
   },

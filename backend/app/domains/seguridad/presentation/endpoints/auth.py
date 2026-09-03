@@ -26,7 +26,7 @@ from app.domains.seguridad.application.dtos.auth_dto import (
     ChangePasswordInputDTO,
     ResetInstitutionalPasswordInputDTO,
 )
-from app.domains.seguridad.domain.exceptions import InvalidDomainException
+from app.domains.seguridad.domain.exceptions import InvalidDomainException, UsuarioInactivoException
 from app.domains.seguridad.domain.entities.user import UserProfile
 from app.domains.seguridad.presentation.deps import (
     get_authenticate_domain_use_case,
@@ -75,7 +75,10 @@ def login(
             )
         )
 
-        # Garantizar que el usuario exista en 'usuario' (vinculado por keycloak_sub)
+        # Garantizar que el usuario exista en 'usuario' (vinculado por keycloak_sub).
+        # UsuarioInactivoException se deja propagar a propósito: si el usuario está
+        # marcado como inactivo, el login debe rechazarse acá, no devolver un token
+        # válido y fallar recién en la siguiente pantalla (ver PermisosPage).
         try:
             profile = verify_use_case.execute(result.access_token)
             sync_rbac.execute(
@@ -83,6 +86,8 @@ def login(
                 username=profile.username,
                 correo=profile.email,
             )
+        except UsuarioInactivoException:
+            raise
         except Exception as exc:
             logger.warning(f"Aviso al guardar usuario en base de datos: {exc}")
 

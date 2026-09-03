@@ -9,7 +9,7 @@ import { AreaFormModal } from '../components/AreaFormModal'
 /**
  * Catálogo de roles y áreas del ERP. Crear rol: nombre libre + permisos por checkbox.
  * Editar rol existente: solo permisos (checkbox), el nombre no se toca. Áreas: alta,
- * renombrar y baja, nombre libre (ver PermisosPage para asignar rol+área a cada usuario).
+ * renombrar y baja, nombre libre (ver UsuariosPage para asignar rol+área a cada usuario).
  */
 export default function RolesPage() {
   const { roles, areas, loading, error } = useSeguridadData()

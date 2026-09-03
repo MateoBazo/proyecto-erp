@@ -7,7 +7,7 @@ import { seguridadActions } from '../data/seguridadStore'
 /**
  * Ventana emergente para asignar rol(es) + área a UN usuario, con el mismo lenguaje
  * visual que PerfilModal (tarjeta de identidad arriba, formulario abajo). Reemplaza los
- * checkboxes que antes vivían sueltos en la fila de la tabla de PermisosPage: acá se abre
+ * checkboxes que antes vivían sueltos en la fila de la tabla de UsuariosPage: acá se abre
  * un modal "de cada uno" para asignar con más espacio y menos fricción visual.
  *
  * El padre debe montar esto con una `key` que cambie en cada apertura (igual que

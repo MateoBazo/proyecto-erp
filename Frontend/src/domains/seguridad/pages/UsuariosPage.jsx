@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
-import { RefreshCw, Search, Users, Pencil } from 'lucide-react'
-import { Card, SectionHeader, Select, Input, EmptyState, Alert, Spinner, Badge, IconButton } from '@/shared/ui'
+import { RefreshCw, Search, Users, Pencil, UserX, UserCheck } from 'lucide-react'
+import { toast } from 'react-toastify'
+import { Card, SectionHeader, Select, Input, EmptyState, Alert, Spinner, Badge, IconButton, ConfirmDialog } from '@/shared/ui'
 import { useSeguridadData, seguridadActions } from '../data/seguridadStore'
 import { UsuarioAsignacionModal } from '../components/UsuarioAsignacionModal'
 
@@ -10,8 +11,13 @@ import { UsuarioAsignacionModal } from '../components/UsuarioAsignacionModal'
  * (UsuarioAsignacionModal, mismo lenguaje visual que PerfilModal) donde se elige el área y
  * los roles juntos y se guardan de una sola vez. Ambos solo ofrecen roles/áreas que ya
  * existen (se crean en RolesPage), nunca texto libre acá.
+ *
+ * Dar de baja a un usuario nunca borra su fila: se lo marca como inactivo
+ * (usuario.activo, CLAUDE.md §6) y el backend le rechaza el login mientras esté así. Se
+ * lo sigue listando (más abajo, atenuado) para poder reactivarlo — conserva el rol/área
+ * que ya tenía.
  */
-export default function PermisosPage() {
+export default function UsuariosPage() {
   const { usuarios, roles, areas, loading, error } = useSeguridadData()
   const [recargando, setRecargando] = useState(false)
   const [busqueda, setBusqueda] = useState('')
@@ -21,10 +27,30 @@ export default function PermisosPage() {
   // Se incrementa en cada apertura para forzar un remount del modal (ver su comentario)
   // y que arranque limpio con los valores del usuario actual.
   const [modalToken, setModalToken] = useState(0)
+  // null = sin confirmación pendiente, objeto = usuario esperando confirmar su desactivación
+  const [usuarioPorDesactivar, setUsuarioPorDesactivar] = useState(null)
 
   const abrirModalAsignacion = (usuario) => {
     setUsuarioEnEdicion(usuario)
     setModalToken((token) => token + 1)
+  }
+
+  const handleActivar = async (usuario) => {
+    try {
+      await seguridadActions.actualizarEstadoUsuario(usuario.id, true)
+      toast.success(`"${usuario.username}" fue reactivado y ya puede iniciar sesión.`)
+    } catch (error) {
+      toast.error(error.message || 'No se pudo reactivar el usuario.')
+    }
+  }
+
+  const handleDesactivar = async (usuario) => {
+    try {
+      await seguridadActions.actualizarEstadoUsuario(usuario.id, false)
+      toast.info(`"${usuario.username}" fue desactivado. Ya no puede iniciar sesión.`)
+    } catch (error) {
+      toast.error(error.message || 'No se pudo desactivar el usuario.')
+    }
   }
 
   const usuariosFiltrados = useMemo(() => {
@@ -73,7 +99,7 @@ export default function PermisosPage() {
     <>
       <Card>
         <div className="flex items-start justify-between gap-3">
-          <SectionHeader icon={Users} eyebrow="Roles" title="Permisos de usuarios" className="flex-1" />
+          <SectionHeader icon={Users} eyebrow="Seguridad" title="Usuarios" className="flex-1" />
           <button
             type="button"
             onClick={handleRecargar}
@@ -127,12 +153,13 @@ export default function PermisosPage() {
                       <th className="px-4 py-3">Correo</th>
                       <th className="px-4 py-3">Roles</th>
                       <th className="px-4 py-3">Área</th>
+                      <th className="px-4 py-3">Estado</th>
                       <th className="px-4 py-3" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {usuariosFiltrados.map((usuario) => (
-                      <tr key={usuario.id} className="bg-white/60">
+                      <tr key={usuario.id} className={`bg-white/60 ${usuario.activo ? '' : 'opacity-60'}`}>
                         <td className="px-4 py-3 font-mono font-medium text-slate-800">{usuario.username}</td>
                         <td className="px-4 py-3 text-slate-600">{usuario.email}</td>
                         <td className="px-4 py-3">
@@ -151,12 +178,35 @@ export default function PermisosPage() {
                         <td className="px-4 py-3 text-slate-600">
                           {nombreDeArea(usuario.areaId) || <span className="text-xs text-slate-400">Sin área</span>}
                         </td>
+                        <td className="px-4 py-3">
+                          <Badge variant={usuario.activo ? 'success' : 'danger'} dot>
+                            {usuario.activo ? 'Activo' : 'Inactivo'}
+                          </Badge>
+                        </td>
                         <td className="px-4 py-3 text-right">
-                          <IconButton
-                            icon={Pencil}
-                            onClick={() => abrirModalAsignacion(usuario)}
-                            aria-label={`Asignar rol y área a ${usuario.username}`}
-                          />
+                          <div className="flex justify-end gap-1">
+                            <IconButton
+                              icon={Pencil}
+                              onClick={() => abrirModalAsignacion(usuario)}
+                              aria-label={`Asignar rol y área a ${usuario.username}`}
+                            />
+                            {usuario.activo ? (
+                              <IconButton
+                                icon={UserX}
+                                tone="danger"
+                                onClick={() => setUsuarioPorDesactivar(usuario)}
+                                aria-label={`Desactivar a ${usuario.username}`}
+                                title="Desactivar (no podrá iniciar sesión)"
+                              />
+                            ) : (
+                              <IconButton
+                                icon={UserCheck}
+                                onClick={() => handleActivar(usuario)}
+                                aria-label={`Reactivar a ${usuario.username}`}
+                                title="Reactivar"
+                              />
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -175,6 +225,19 @@ export default function PermisosPage() {
         usuario={usuarioEnEdicion}
         roles={roles}
         areas={areas}
+      />
+
+      <ConfirmDialog
+        open={usuarioPorDesactivar !== null}
+        onClose={() => setUsuarioPorDesactivar(null)}
+        onConfirm={() => handleDesactivar(usuarioPorDesactivar)}
+        title="Desactivar usuario"
+        message={
+          usuarioPorDesactivar
+            ? `"${usuarioPorDesactivar.username}" no va a poder iniciar sesión mientras esté inactivo. Conserva su rol y área asignados — se pueden reactivar en cualquier momento desde acá.`
+            : ''
+        }
+        confirmLabel="Desactivar"
       />
     </>
   )

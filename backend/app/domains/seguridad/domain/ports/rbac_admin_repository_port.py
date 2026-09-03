@@ -59,7 +59,9 @@ class RbacAdminRepositoryPort(ABC):
 
     @abstractmethod
     def list_usuarios_con_asignacion(self) -> List[UsuarioAsignacionEntity]:
-        """Todos los usuarios (tabla 'usuario') junto con su rol+área actual, si tienen uno."""
+        """Todos los usuarios (tabla 'usuario') junto con su rol+área actual, si tienen uno.
+        Incluye tanto activos como inactivos — un admin necesita ver a los inactivos para
+        poder reactivarlos, no solo desactivarlos (ver set_usuario_activo)."""
         pass
 
     @abstractmethod
@@ -76,5 +78,17 @@ class RbacAdminRepositoryPort(ABC):
         una misma área). Si rol_ids viene vacío o area_id no viene, el usuario queda sin
         asignación (la base exige ambos juntos o ninguno: no existe usuario_rol_area sin
         área, CLAUDE.md §6).
+        """
+        pass
+
+    @abstractmethod
+    def set_usuario_activo(
+        self, usuario_id: str, activo: bool, actor_usuario_id: Optional[str]
+    ) -> UsuarioAsignacionEntity:
+        """
+        Marca un usuario como activo/inactivo (usuario.activo) en vez de borrarlo — la
+        tabla real ya trae esta columna para eso (CLAUDE.md §6). No toca sus roles/área:
+        un usuario reactivado recupera la asignación que ya tenía. Un usuario inactivo no
+        puede volver a autenticarse (ver SyncUserRbacUseCase / get_current_user).
         """
         pass

@@ -1,4 +1,4 @@
-import PermisosPage from './pages/PermisosPage'
+import UsuariosPage from './pages/UsuariosPage'
 import RolesPage from './pages/RolesPage'
 
 /**
@@ -7,6 +7,6 @@ import RolesPage from './pages/RolesPage'
  * backend/app/registry.py).
  */
 export const seguridadRoutes = [
-  { path: '/seguridad/permisos', element: <PermisosPage /> },
+  { path: '/seguridad/usuarios', element: <UsuariosPage /> },
   { path: '/seguridad/roles', element: <RolesPage /> },
 ]

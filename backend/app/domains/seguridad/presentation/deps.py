@@ -27,6 +27,7 @@ from app.domains.seguridad.application.use_cases import (
     DeleteAreaUseCase,
     ListUsuariosAsignacionUseCase,
     AsignarRolAreaUseCase,
+    SetUsuarioActivoUseCase,
 )
 from app.domains.seguridad.infrastructure.keycloak_adapter import KeycloakAdapter
 from app.domains.seguridad.infrastructure.zentyal_ldap_adapter import ZentyalLdapAdapter
@@ -114,13 +115,31 @@ def get_reset_institutional_password_use_case(
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Security(security),
     verify_use_case: VerifyTokenUseCase = Depends(get_verify_token_use_case),
+    user_repository: UserRepositoryPort = Depends(get_user_repository),
 ) -> UserProfile:
     """
     Dependencia de FastAPI para proteger endpoints.
     Extrae el token Bearer, lo valida contra Keycloak y retorna la entidad UserProfile.
+
+    También rechaza acá a un usuario marcado como inactivo (usuario.activo = false, ver
+    PermisosPage): como esta dependencia la usan todos los endpoints protegidos, alcanza
+    con este único chequeo para que una desactivación a mitad de sesión corte el acceso
+    en el siguiente request, no solo en el próximo /login. Si el 'sub' del token todavía
+    no tiene fila en 'usuario' (nunca hizo login por credenciales), se deja pasar — no hay
+    nada que bloquear todavía.
     """
     token = credentials.credentials
-    return verify_use_case.execute(token)
+    profile = verify_use_case.execute(token)
+
+    if profile.sub:
+        usuario = user_repository.get_by_keycloak_sub(profile.sub)
+        if usuario and not usuario.activo:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Tu usuario está inactivo. Contactá a un administrador.",
+            )
+
+    return profile
 
 
 def get_current_usuario_id(
@@ -188,6 +207,12 @@ def get_asignar_rol_area_use_case(
     repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository),
 ) -> AsignarRolAreaUseCase:
     return AsignarRolAreaUseCase(repository=repo)
+
+
+def get_set_usuario_activo_use_case(
+    repo: RbacAdminRepositoryPort = Depends(get_rbac_admin_repository),
+) -> SetUsuarioActivoUseCase:
+    return SetUsuarioActivoUseCase(repository=repo)
 
 
 def require_permission(codigo: str):

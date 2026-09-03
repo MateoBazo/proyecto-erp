@@ -13,6 +13,7 @@ from app.domains.seguridad.application.use_cases import (
     DeleteAreaUseCase,
     ListUsuariosAsignacionUseCase,
     AsignarRolAreaUseCase,
+    SetUsuarioActivoUseCase,
 )
 from app.domains.seguridad.presentation.deps import (
     get_current_user,
@@ -27,6 +28,7 @@ from app.domains.seguridad.presentation.deps import (
     get_delete_area_use_case,
     get_list_usuarios_asignacion_use_case,
     get_asignar_rol_area_use_case,
+    get_set_usuario_activo_use_case,
 )
 from app.domains.seguridad.presentation.schemas.rbac_admin_schema import (
     RolOut,
@@ -38,6 +40,7 @@ from app.domains.seguridad.presentation.schemas.rbac_admin_schema import (
     AreaUpdateRequest,
     UsuarioAsignacionOut,
     AsignarRolAreaRequest,
+    UsuarioEstadoUpdateRequest,
 )
 from app.domains.seguridad.presentation.schemas.auth_schema import PublicMessageResponse
 
@@ -73,6 +76,7 @@ def _usuario_to_out(entity) -> UsuarioAsignacionOut:
         roles=[RolResumenOut(id=rol.id_rol, nombre=rol.nombre) for rol in entity.roles],
         area_id=entity.area_id,
         area_nombre=entity.area_nombre,
+        activo=entity.activo,
     )
 
 
@@ -176,4 +180,22 @@ def asignar_rol_area(
     use_case: AsignarRolAreaUseCase = Depends(get_asignar_rol_area_use_case),
 ):
     resultado = use_case.execute(usuario_id, payload.rol_ids, payload.area_id, actor_id)
+    return _usuario_to_out(resultado)
+
+
+@router.put("/usuarios/{usuario_id}/estado", response_model=UsuarioAsignacionOut)
+def actualizar_estado_usuario(
+    usuario_id: str,
+    payload: UsuarioEstadoUpdateRequest,
+    _current_user: UserProfile = Depends(get_current_user),
+    actor_id: Optional[str] = Depends(get_current_usuario_id),
+    use_case: SetUsuarioActivoUseCase = Depends(get_set_usuario_activo_use_case),
+):
+    """
+    Activa/desactiva un usuario (usuario.activo) en vez de borrarlo — CLAUDE.md §6 pide
+    soft delete para usuarios. Un usuario inactivo conserva su rol/área asignados (por si
+    se reactiva después) pero no puede volver a autenticarse (SyncUserRbacUseCase /
+    get_current_user rechazan el login/las requests mientras esté inactivo).
+    """
+    resultado = use_case.execute(usuario_id, payload.activo, actor_id)
     return _usuario_to_out(resultado)

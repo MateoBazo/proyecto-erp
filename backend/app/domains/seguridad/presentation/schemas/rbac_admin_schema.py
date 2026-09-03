@@ -49,6 +49,7 @@ class UsuarioAsignacionOut(BaseModel):
     roles: List[RolResumenOut] = Field(default_factory=list)
     area_id: Optional[str] = None
     area_nombre: Optional[str] = None
+    activo: bool = True
 
 
 class AsignarRolAreaRequest(BaseModel):
@@ -57,3 +58,8 @@ class AsignarRolAreaRequest(BaseModel):
     bajo la misma área."""
     rol_ids: List[str] = Field(default_factory=list)
     area_id: Optional[str] = None
+
+
+class UsuarioEstadoUpdateRequest(BaseModel):
+    """Activar/desactivar un usuario (usuario.activo) en vez de borrarlo — ver CLAUDE.md §6."""
+    activo: bool
