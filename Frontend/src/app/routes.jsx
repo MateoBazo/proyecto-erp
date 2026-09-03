@@ -7,13 +7,11 @@ import { DOMAIN_ROUTES } from '@/domains'
 import { AppShell } from './layout'
 import { DashboardPage, DomainHome, ModulePlaceholder } from './pages'
 
-// Paths con pantalla real (ver src/domains/index.js) — se excluyen del placeholder genérico.
+// Rutas implementadas con pantalla propia
 const IMPLEMENTED_PATHS = new Set(DOMAIN_ROUTES.map((route) => route.path))
 
 /**
- * Bloquea la entrada por URL directa a un módulo que `permisos` no habilita (ocultar el
- * link en el sidebar/dashboard no alcanza — sin esto alguien podía escribir la ruta a
- * mano). `section` es la entrada de NAV_SECTIONS dueña de la ruta (ver getCurrentDomain).
+ * Protege el acceso por URL verificando los permisos del usuario.
  */
 function ModuleGuard({ section, children }) {
   const { user } = useAuth()
@@ -24,15 +22,13 @@ function ModuleGuard({ section, children }) {
 }
 
 /**
- * Enrutador principal de la aplicación con separación de rutas públicas y protegidas.
- * Toda ruta protegida se monta dentro de <AppShell/> (sidebar + header), que expone
- * el resto del árbol vía <Outlet/>.
+ * Enrutador principal de la aplicación.
  */
 export function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Ruta pública de Login (si ya está autenticado, redirige a /dashboard) */}
+        {/* Ruta pública de Login */}
         <Route
           path="/"
           element={
@@ -42,7 +38,7 @@ export function AppRoutes() {
           }
         />
 
-        {/* Área protegida: requiere token válido de Keycloak, se navega desde el sidebar */}
+        {/* Rutas protegidas */}
         <Route
           element={
             <ProtectedRoute>
@@ -52,7 +48,7 @@ export function AppRoutes() {
         >
           <Route path="dashboard" element={<DashboardPage />} />
 
-          {/* Entrada a cada dominio: muestra sus subsistemas como botones grandes */}
+          {/* Pantallas de inicio de dominio */}
           {DOMAIN_SECTIONS.map((domain) => (
             <Route
               key={domain.path}
@@ -65,7 +61,7 @@ export function AppRoutes() {
             />
           ))}
 
-          {/* Dominios con pantalla real (ver src/domains/index.js) */}
+          {/* Rutas de dominios implementados */}
           {DOMAIN_ROUTES.map((route) => (
             <Route
               key={route.path}
@@ -74,7 +70,7 @@ export function AppRoutes() {
             />
           ))}
 
-          {/* Módulos del ERP sin funcionalidad real todavía (ver shared/nav/navConfig.js) */}
+          {/* Módulos pendientes de implementación */}
           {PLACEHOLDER_ROUTES.filter((route) => !IMPLEMENTED_PATHS.has(route.path)).map((route) => (
             <Route
               key={route.path}
@@ -88,7 +84,6 @@ export function AppRoutes() {
           ))}
         </Route>
 
-        {/* Redirección para cualquier otra ruta no reconocida */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

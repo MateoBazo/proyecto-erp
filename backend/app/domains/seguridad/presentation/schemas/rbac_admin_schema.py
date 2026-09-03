@@ -3,9 +3,7 @@ from pydantic import BaseModel, Field
 
 
 class RolOut(BaseModel):
-    """Rol interno con sus permisos ya resueltos como códigos 'recurso.accion'
-    (ej. 'geoextraccion.ver') — el mismo formato que usa el checklist de permisos
-    del frontend (RolPermisosCheckboxes)."""
+    """Rol interno con sus permisos como códigos 'recurso.accion'."""
     id: str
     nombre: str
     descripcion: Optional[str] = None
@@ -53,13 +51,12 @@ class UsuarioAsignacionOut(BaseModel):
 
 
 class AsignarRolAreaRequest(BaseModel):
-    """rol_ids y area_id se envían juntos o ambos vacíos: la base no admite un rol sin
-    área ni viceversa (CLAUDE.md §6). rol_ids puede tener más de un rol — todos quedan
-    bajo la misma área."""
+    """rol_ids y area_id van juntos o ambos vacíos. Puede haber más de un rol,
+    todos bajo la misma área."""
     rol_ids: List[str] = Field(default_factory=list)
     area_id: Optional[str] = None
 
 
 class UsuarioEstadoUpdateRequest(BaseModel):
-    """Activar/desactivar un usuario (usuario.activo) en vez de borrarlo — ver CLAUDE.md §6."""
+    """Activar/desactivar un usuario en vez de borrarlo."""
     activo: bool

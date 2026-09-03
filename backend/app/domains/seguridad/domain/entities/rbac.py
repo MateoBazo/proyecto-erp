@@ -12,17 +12,13 @@ class PermissionEntity:
 
     @property
     def codigo(self) -> str:
-        """Representación 'recurso.accion' — aproximación al formato dominio.recurso.accion
-        de CLAUDE.md §8. El nivel 'dominio' (sistema/subsistema en la base real) todavía no
-        está confirmado como equivalente a los dominios del ERP; no asumir que lo es sin
-        confirmar con el equipo (ver CLAUDE.md §10)."""
+        """Representación 'recurso.accion' del permiso."""
         return f"{self.recurso}.{self.accion}" if self.recurso else self.accion
 
 
 @dataclass
 class RoleEntity:
-    """Entidad de dominio para un rol interno (tabla rol_interno). Sin keycloak_id: un rol
-    interno es independiente de los roles de Keycloak (CLAUDE.md §5 y §6)."""
+    """Rol interno (tabla rol_interno). Sin keycloak_id: es independiente de Keycloak."""
     id_rol: Optional[str]
     nombre: str
     descripcion: Optional[str] = None
@@ -43,8 +39,7 @@ class UserEntity:
 
 @dataclass
 class AreaEntity:
-    """Entidad de dominio para un área (tabla area) — el 'alcance' con el que se asigna
-    un rol_interno a un usuario (usuario_rol_area, ver CLAUDE.md §5)."""
+    """Área (tabla area): el alcance con el que se asigna un rol a un usuario."""
     id_area: Optional[str]
     nombre: str
     tipo: Optional[str] = None
@@ -52,11 +47,8 @@ class AreaEntity:
 
 @dataclass
 class UsuarioAsignacionEntity:
-    """Vista de un usuario junto con su asignación actual de roles + área (usuario_rol_area).
-    El esquema real permite varias filas por usuario (varios rol+área a la vez); esta entidad
-    ahora sí lo refleja: varios roles a la vez, todos bajo una misma área (un usuario tiene
-    una sola área activa, pero puede tener N roles dentro de ella — una fila usuario_rol_area
-    por rol seleccionado, todas con el mismo area_id)."""
+    """Usuario con su asignación actual de roles + área. Puede tener varios roles
+    a la vez, pero siempre dentro de una misma área."""
     id_usuario: str
     username: str
     correo: Optional[str]

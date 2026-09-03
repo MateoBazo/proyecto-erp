@@ -4,11 +4,7 @@ from app.domains.geoextraccion.domain.entities.terreno import Terreno
 
 
 class ShapefilePort(ABC):
-    """
-    Puerto que la infraestructura de Geoextracción debe implementar (ver CLAUDE.md §3).
-    application/ solo conoce esta interfaz, nunca la librería concreta (GeoPandas/Shapely)
-    que la implementa — eso es lo que mantiene extraíble este dominio a futuro.
-    """
+    """Interfaz para generar/fusionar Shapefiles; application/ no conoce GeoPandas."""
 
     @abstractmethod
     def generar(self, terrenos: list[Terreno]) -> bytes:

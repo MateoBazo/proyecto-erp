@@ -19,8 +19,7 @@ function SubsystemTile({ label, path, icon: Icon }) {
 }
 
 /**
- * Pantalla de entrada a un dominio (Catastro, Administración, ...): muestra sus
- * subsistemas como botones grandes, en vez de un submenú anidado en el sidebar.
+ * Pantalla de entrada a un dominio que muestra sus subsistemas disponibles.
  */
 export function DomainHome() {
   const { pathname } = useLocation()

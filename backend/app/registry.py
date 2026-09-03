@@ -1,8 +1,7 @@
 """
-Único lugar que conoce todos los dominios del ERP y los ensambla en la aplicación
-(ver CLAUDE.md §3). Para agregar un dominio nuevo: registrar su router acá — no hace
-falta tocar ningún otro dominio existente. Si un dominio falla al importar, se omite
-con una advertencia en vez de tumbar el arranque de toda la aplicación.
+Único lugar que conoce todos los dominios y los registra en la app.
+Si un dominio falla al importar, se omite con una advertencia en vez de
+tumbar el arranque completo.
 """
 import logging
 from fastapi import APIRouter

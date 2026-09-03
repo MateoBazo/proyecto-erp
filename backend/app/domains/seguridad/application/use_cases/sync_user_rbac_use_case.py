@@ -10,26 +10,16 @@ INSTITUTIONAL_SUB_SENTINEL = "institucional"
 
 class SyncUserRbacUseCase:
     """
-    Caso de uso: garantiza que el usuario autenticado por Keycloak tenga un registro en
-    PostgreSQL (vinculado por keycloak_sub) y recupera los permisos que ya le fueron
-    asignados en el modelo RBAC interno.
+    Garantiza que el usuario autenticado por Keycloak tenga un registro en
+    PostgreSQL (vinculado por keycloak_sub) y devuelve sus permisos RBAC.
 
-    No asigna roles a partir de los roles de Keycloak: CLAUDE.md §5 es explícito en que
-    nunca se toma una decisión de autorización de negocio a partir del rol de Keycloak
-    directamente. Lo que sí hace (delegado en SqlUserRepository.ensure_user_exists) es
-    darle a todo usuario nuevo un punto de partida fijo — área "Catastro" + rol "Inicio",
-    no elegido en base a nada de Keycloak — en vez de dejarlo sin ningún permiso hasta que
-    un admin se lo asigne a mano desde PermisosPage.
+    No copia roles de Keycloak: un usuario nuevo arranca con un punto de partida
+    fijo (área "Catastro" + rol "Inicio", ver SqlUserRepository.ensure_user_exists),
+    no algo derivado del token.
 
-    Caso "institucional": cuando el token no trae 'sub' (p. ej. un token de tipo
-    client_credentials, o de una cuenta de Keycloak que no representa a una persona —
-    como las credenciales de admin-cli/realm master usadas hoy para pruebas), no hay
-    identidad individual real que vincular. En vez de descartar el intento de sync, se
-    reutiliza siempre el mismo usuario 'Institucional' (vía INSTITUTIONAL_SUB_SENTINEL),
-    igual que hacía la versión anterior del backend. OJO: esto significa que ninguna
-    acción hecha bajo estas condiciones se puede auditar por persona — confirmar con el
-    equipo si esto es aceptable a largo plazo o si hace falta un usuario Keycloak real
-    por persona (ver CLAUDE.md §10).
+    Caso "institucional": si el token no trae 'sub' (cuenta de servicio, no una
+    persona), se reutiliza siempre el mismo usuario 'Institucional'. Ojo: bajo ese
+    modo ninguna acción se puede auditar por persona.
     """
 
     def __init__(self, user_repository: UserRepositoryPort):

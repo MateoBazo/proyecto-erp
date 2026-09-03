@@ -9,11 +9,7 @@ from app.domains.seguridad.domain.entities.rbac import (
 
 
 class RbacAdminRepositoryPort(ABC):
-    """
-    Puerto para la pantalla de administración de roles, áreas y asignación usuario-rol-área
-    (rol_interno, area, usuario_rol_area, permiso, rol_permiso) — la pieza que CLAUDE.md §10
-    marca como pendiente ("hoy no existe ninguna, es manual directo en la base").
-    """
+    """Puerto para administrar roles, áreas y asignaciones usuario-rol-área."""
 
     @abstractmethod
     def list_roles(self) -> List[RoleEntity]:
@@ -28,10 +24,8 @@ class RbacAdminRepositoryPort(ABC):
     @abstractmethod
     def set_role_permissions(self, rol_id: str, codigos: List[str], actor_usuario_id: Optional[str]) -> RoleEntity:
         """
-        Reemplaza por completo el conjunto de permisos de un rol. Cada código
-        'recurso.accion' se resuelve a una fila real en 'permiso' (creándola si hace
-        falta, junto con su 'recurso' — nunca un permiso chequeado solo en código sin
-        fila en la tabla, CLAUDE.md §4).
+        Reemplaza todos los permisos de un rol. Cada código 'recurso.accion' se
+        resuelve a una fila real en 'permiso' (creándola si hace falta).
         """
         pass
 
@@ -73,11 +67,9 @@ class RbacAdminRepositoryPort(ABC):
         actor_usuario_id: Optional[str],
     ) -> UsuarioAsignacionEntity:
         """
-        Reemplaza la asignación de un usuario por la indicada: una fila usuario_rol_area por
-        cada rol_id en rol_ids, todas con el mismo area_id (varios roles pueden convivir en
-        una misma área). Si rol_ids viene vacío o area_id no viene, el usuario queda sin
-        asignación (la base exige ambos juntos o ninguno: no existe usuario_rol_area sin
-        área, CLAUDE.md §6).
+        Reemplaza la asignación de un usuario: una fila usuario_rol_area por cada
+        rol_id, todas con el mismo area_id. Si rol_ids está vacío o falta area_id,
+        el usuario queda sin asignación.
         """
         pass
 
@@ -86,9 +78,7 @@ class RbacAdminRepositoryPort(ABC):
         self, usuario_id: str, activo: bool, actor_usuario_id: Optional[str]
     ) -> UsuarioAsignacionEntity:
         """
-        Marca un usuario como activo/inactivo (usuario.activo) en vez de borrarlo — la
-        tabla real ya trae esta columna para eso (CLAUDE.md §6). No toca sus roles/área:
-        un usuario reactivado recupera la asignación que ya tenía. Un usuario inactivo no
-        puede volver a autenticarse (ver SyncUserRbacUseCase / get_current_user).
+        Marca un usuario como activo/inactivo en vez de borrarlo. No toca sus
+        roles/área: al reactivarlo recupera la asignación que ya tenía.
         """
         pass

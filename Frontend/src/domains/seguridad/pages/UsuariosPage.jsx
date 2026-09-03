@@ -6,28 +6,20 @@ import { useSeguridadData, seguridadActions } from '../data/seguridadStore'
 import { UsuarioAsignacionModal } from '../components/UsuarioAsignacionModal'
 
 /**
- * Lista de usuarios con sus roles y área actuales. Asignar rol(es) + área ya no se hace
- * con checkboxes sueltos en la fila: se abre una ventana emergente por usuario
- * (UsuarioAsignacionModal, mismo lenguaje visual que PerfilModal) donde se elige el área y
- * los roles juntos y se guardan de una sola vez. Ambos solo ofrecen roles/áreas que ya
- * existen (se crean en RolesPage), nunca texto libre acá.
- *
- * Dar de baja a un usuario nunca borra su fila: se lo marca como inactivo
- * (usuario.activo, CLAUDE.md §6) y el backend le rechaza el login mientras esté así. Se
- * lo sigue listando (más abajo, atenuado) para poder reactivarlo — conserva el rol/área
- * que ya tenía.
+ * Lista de usuarios con sus roles y área. Asignar rol/área abre un modal aparte
+ * en vez de checkboxes en la fila. Desactivar no borra al usuario, solo lo marca
+ * inactivo (no puede loguearse) y lo sigue mostrando para poder reactivarlo.
  */
 export default function UsuariosPage() {
   const { usuarios, roles, areas, loading, error } = useSeguridadData()
   const [recargando, setRecargando] = useState(false)
   const [busqueda, setBusqueda] = useState('')
   const [rolFiltro, setRolFiltro] = useState('')
-  // undefined = modal cerrado, objeto = usuario que se está editando
+  // undefined = modal cerrado, objeto = usuario en edición
   const [usuarioEnEdicion, setUsuarioEnEdicion] = useState(undefined)
-  // Se incrementa en cada apertura para forzar un remount del modal (ver su comentario)
-  // y que arranque limpio con los valores del usuario actual.
+  // Aumenta en cada apertura para remontar el modal limpio
   const [modalToken, setModalToken] = useState(0)
-  // null = sin confirmación pendiente, objeto = usuario esperando confirmar su desactivación
+  // null = sin confirmación pendiente, objeto = usuario a desactivar
   const [usuarioPorDesactivar, setUsuarioPorDesactivar] = useState(null)
 
   const abrirModalAsignacion = (usuario) => {

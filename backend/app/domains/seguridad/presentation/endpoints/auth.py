@@ -147,16 +147,10 @@ def reset_institutional_password(
     use_case: ResetInstitutionalPasswordUseCase = Depends(get_reset_institutional_password_use_case),
 ):
     """
-    Resetea la contraseña de un usuario institucional directamente en el directorio
-    Zentyal (LDAPS + unicodePwd), usando la cuenta de servicio administrativa
-    configurada por entorno. No es self-service: no valida la contraseña actual.
+    Resetea la contraseña de un usuario institucional en el directorio Zentyal,
+    con la cuenta de servicio administrativa. No valida la contraseña actual.
 
-    ⚠️ Solo exige un Bearer token válido (`get_current_user`). Todavía NO valida un
-    permiso de negocio fino (ej. `seguridad.usuarios.resetear_password_institucional`)
-    porque ese mecanismo de autorización por permisos no está implementado en el
-    backend aún (CLAUDE.md §4/§10). Hoy, cualquier usuario autenticado puede resetear
-    la contraseña de cualquier otro usuario institucional — no exponer este endpoint
-    fuera de un ambiente de pruebas sin resolver esto antes.
+    Solo exige login, todavía no un permiso fino: no exponer fuera de pruebas.
     """
     use_case.execute(
         ResetInstitutionalPasswordInputDTO(

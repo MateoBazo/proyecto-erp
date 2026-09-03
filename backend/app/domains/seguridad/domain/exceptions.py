@@ -1,8 +1,7 @@
 from app.core.errors.exceptions import DomainException
 
-# Excepciones técnicas de autenticación/tokens (comunicación con Keycloak) viven en
-# core.security.exceptions, porque cualquier dominio que integre Keycloak las necesita,
-# no solo `seguridad`. Se re-exportan acá por comodidad para el código de este dominio.
+# Excepciones de autenticación/tokens viven en core.security.exceptions
+# (las necesita cualquier dominio con Keycloak); se re-exportan acá por comodidad.
 from app.core.security.exceptions import (  # noqa: F401
     InvalidCredentialsException,
     TokenVerificationException,
@@ -17,9 +16,8 @@ class InvalidDomainException(DomainException):
 
 
 class UsuarioInactivoException(DomainException):
-    """Se lanza cuando un usuario marcado como inactivo (usuario.activo = false, ver
-    PermisosPage) intenta autenticarse. La cuenta sigue existiendo en Keycloak — el
-    bloqueo es una decisión de autorización del ERP, no de Keycloak (CLAUDE.md §5)."""
+    """Se lanza cuando un usuario inactivo (usuario.activo = false) intenta
+    autenticarse. Sigue existiendo en Keycloak; el bloqueo lo decide el ERP."""
     http_status = 403
 
 

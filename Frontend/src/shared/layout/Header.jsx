@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { LogOut, Menu, User } from 'lucide-react'
 import { Button } from '@/shared/ui'
 import { BRAND } from '@/shared/branding'
@@ -22,11 +23,18 @@ export function Header({ onLogout, onToggleSidebar, user }) {
             </button>
           )}
 
-          <img
-            src={BRAND.logoSrc}
-            alt={BRAND.logoAlt}
-            className="h-9 w-auto shrink-0"
-          />
+          <Link
+            to="/dashboard"
+            title="Ir a Inicio"
+            aria-label="Ir a Inicio"
+            className="rounded-xl transition-transform duration-200 hover:scale-105 active:scale-95"
+          >
+            <img
+              src={BRAND.logoSrc}
+              alt={BRAND.logoAlt}
+              className="h-9 w-auto shrink-0"
+            />
+          </Link>
         </div>
 
         <div className="flex items-center gap-2">

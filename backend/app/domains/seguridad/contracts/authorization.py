@@ -1,7 +1,5 @@
 """
-Punto de entrada público del dominio `seguridad` para exigir un permiso RBAC concreto
-desde otro dominio, sin importar nada de las capas internas de seguridad
-(CLAUDE.md §2: "Dominio A -> contracts/ de Dominio B" es el único punto permitido).
+Punto de entrada público de seguridad para exigir un permiso RBAC desde otro dominio.
 
 Uso desde otro dominio, ej. catastro:
 
