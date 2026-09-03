@@ -16,6 +16,7 @@ from app.domains.seguridad.application.use_cases.rbac_admin_use_cases import (
     DeleteAreaUseCase,
     ListUsuariosAsignacionUseCase,
     AsignarRolAreaUseCase,
+    SetUsuarioActivoUseCase,
 )
 
 __all__ = [
@@ -36,4 +37,5 @@ __all__ = [
     "DeleteAreaUseCase",
     "ListUsuariosAsignacionUseCase",
     "AsignarRolAreaUseCase",
+    "SetUsuarioActivoUseCase",
 ]

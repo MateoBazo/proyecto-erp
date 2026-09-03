@@ -26,5 +26,6 @@ export const API_ENDPOINTS = {
     AREA: (areaId) => `/api/seguridad/areas/${areaId}`,
     USUARIOS: '/api/seguridad/usuarios',
     USUARIO_ASIGNACION: (usuarioId) => `/api/seguridad/usuarios/${usuarioId}/asignacion`,
+    USUARIO_ESTADO: (usuarioId) => `/api/seguridad/usuarios/${usuarioId}/estado`,
   },
 }

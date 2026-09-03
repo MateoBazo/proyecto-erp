@@ -16,9 +16,17 @@ class InvalidDomainException(DomainException):
     pass
 
 
+class UsuarioInactivoException(DomainException):
+    """Se lanza cuando un usuario marcado como inactivo (usuario.activo = false, ver
+    PermisosPage) intenta autenticarse. La cuenta sigue existiendo en Keycloak — el
+    bloqueo es una decisión de autorización del ERP, no de Keycloak (CLAUDE.md §5)."""
+    http_status = 403
+
+
 __all__ = [
     "DomainException",
     "InvalidDomainException",
+    "UsuarioInactivoException",
     "InvalidCredentialsException",
     "TokenVerificationException",
     "TokenExpiredException",

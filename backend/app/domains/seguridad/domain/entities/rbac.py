@@ -63,3 +63,4 @@ class UsuarioAsignacionEntity:
     roles: List[RoleEntity] = field(default_factory=list)
     area_id: Optional[str] = None
     area_nombre: Optional[str] = None
+    activo: bool = True

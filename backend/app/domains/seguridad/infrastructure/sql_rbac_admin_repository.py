@@ -129,8 +129,7 @@ class SqlRbacAdminRepository(RbacAdminRepositoryPort):
                 joinedload(UsuarioModel.asignaciones).joinedload(UsuarioRolAreaModel.rol),
                 joinedload(UsuarioModel.asignaciones).joinedload(UsuarioRolAreaModel.area),
             )
-            .filter(UsuarioModel.activo.is_(True))
-            .order_by(UsuarioModel.username)
+            .order_by(UsuarioModel.activo.desc(), UsuarioModel.username)
             .all()
         )
         return [self._usuario_to_entity(usuario) for usuario in usuarios]
@@ -157,6 +156,32 @@ class SqlRbacAdminRepository(RbacAdminRepositoryPort):
             actor_usuario_id,
             "usuario.rol_area.asignar",
             f"Asignación de rol/área de '{usuario.username}' actualizada.",
+        )
+
+        usuario = (
+            self._db.query(UsuarioModel)
+            .options(
+                joinedload(UsuarioModel.asignaciones).joinedload(UsuarioRolAreaModel.rol),
+                joinedload(UsuarioModel.asignaciones).joinedload(UsuarioRolAreaModel.area),
+            )
+            .filter(UsuarioModel.id == usuario_id)
+            .first()
+        )
+        return self._usuario_to_entity(usuario)
+
+    def set_usuario_activo(
+        self, usuario_id: str, activo: bool, actor_usuario_id: Optional[str]
+    ) -> UsuarioAsignacionEntity:
+        usuario = self._db.query(UsuarioModel).filter(UsuarioModel.id == usuario_id).first()
+        if not usuario:
+            raise ValueError(f"No existe el usuario '{usuario_id}'.")
+
+        usuario.activo = activo
+        self._db.commit()
+        self._audit(
+            actor_usuario_id,
+            "usuario.activo.actualizar",
+            f"Usuario '{usuario.username}' marcado como {'activo' if activo else 'inactivo'}.",
         )
 
         usuario = (
@@ -277,4 +302,5 @@ class SqlRbacAdminRepository(RbacAdminRepositoryPort):
             ],
             area_id=str(primera.area_id) if primera else None,
             area_nombre=primera.area.nombre if primera and primera.area else None,
+            activo=usuario.activo,
         )

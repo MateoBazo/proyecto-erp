@@ -96,3 +96,13 @@ class AsignarRolAreaUseCase:
         actor_usuario_id: Optional[str],
     ) -> UsuarioAsignacionEntity:
         return self._repository.asignar_rol_area(usuario_id, rol_ids, area_id, actor_usuario_id)
+
+
+class SetUsuarioActivoUseCase:
+    def __init__(self, repository: RbacAdminRepositoryPort):
+        self._repository = repository
+
+    def execute(
+        self, usuario_id: str, activo: bool, actor_usuario_id: Optional[str]
+    ) -> UsuarioAsignacionEntity:
+        return self._repository.set_usuario_activo(usuario_id, activo, actor_usuario_id)

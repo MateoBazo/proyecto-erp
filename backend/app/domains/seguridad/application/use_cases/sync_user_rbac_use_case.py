@@ -1,6 +1,7 @@
 from typing import List, Optional, Tuple
 
 from app.domains.seguridad.domain.entities.rbac import UserEntity
+from app.domains.seguridad.domain.exceptions import UsuarioInactivoException
 from app.domains.seguridad.domain.ports.user_repository_port import UserRepositoryPort
 
 
@@ -43,6 +44,12 @@ class SyncUserRbacUseCase:
         if not clean_sub:
             clean_sub = INSTITUTIONAL_SUB_SENTINEL
             clean_username = clean_username if clean_username != "usuario_anonimo" else "Institucional"
+
+        usuario_existente = self._user_repository.get_by_keycloak_sub(clean_sub)
+        if usuario_existente and not usuario_existente.activo:
+            raise UsuarioInactivoException(
+                "Tu usuario está inactivo. Contactá a un administrador."
+            )
 
         user_entity = self._user_repository.ensure_user_exists(
             keycloak_sub=clean_sub, username=clean_username, correo=correo

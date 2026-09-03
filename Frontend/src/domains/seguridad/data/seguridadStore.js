@@ -3,7 +3,7 @@ import { seguridadApi } from '../api/seguridad.api'
 
 /**
  * Store del dominio seguridad — vive como singleton de módulo, fuera del árbol de React,
- * para que PermisosPage y RolesPage compartan el mismo estado (roles/áreas/usuarios) aunque
+ * para que UsuariosPage y RolesPage compartan el mismo estado (roles/áreas/usuarios) aunque
  * el router desmonte una página al navegar a la otra. Se recarga desde el backend real
  * (backend/app/domains/seguridad, ver seguridad.api.js) al primer montaje; se pierde al
  * recargar la pestaña, que es correcto: el backend es la fuente de verdad.
@@ -76,7 +76,7 @@ export const seguridadActions = {
     setState((s) => ({
       roles: s.roles.filter((r) => r.id !== rolId),
       // Limpia el rol de cualquier usuario que lo tuviera asignado para no dejar
-      // referencias colgadas (PermisosPage ya no lo listaría entre sus roles).
+      // referencias colgadas (UsuariosPage ya no lo listaría entre sus roles).
       usuarios: s.usuarios.map((u) => ({ ...u, rolIds: u.rolIds.filter((id) => id !== rolId) })),
     }))
   },
@@ -98,13 +98,19 @@ export const seguridadActions = {
     setState((s) => ({
       areas: s.areas.filter((a) => a.id !== areaId),
       // Limpia el área de cualquier usuario que la tuviera asignada para no dejar
-      // referencias colgadas (PermisosPage la mostraría como "Sin área").
+      // referencias colgadas (UsuariosPage la mostraría como "Sin área").
       usuarios: s.usuarios.map((u) => (u.areaId === areaId ? { ...u, areaId: '' } : u)),
     }))
   },
 
   async asignarRolArea(usuarioId, { rolIds, areaId }) {
     const usuario = await seguridadApi.asignarRolArea(usuarioId, { rolIds, areaId })
+    setState((s) => ({ usuarios: s.usuarios.map((u) => (u.id === usuarioId ? usuario : u)) }))
+    return usuario
+  },
+
+  async actualizarEstadoUsuario(usuarioId, activo) {
+    const usuario = await seguridadApi.actualizarEstadoUsuario(usuarioId, activo)
     setState((s) => ({ usuarios: s.usuarios.map((u) => (u.id === usuarioId ? usuario : u)) }))
     return usuario
   },
