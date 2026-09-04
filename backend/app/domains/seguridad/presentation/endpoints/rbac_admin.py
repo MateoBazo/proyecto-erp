@@ -44,13 +44,8 @@ from app.domains.seguridad.presentation.schemas.rbac_admin_schema import (
 )
 from app.domains.seguridad.presentation.schemas.auth_schema import PublicMessageResponse
 
-# ⚠️ Todos los endpoints de acá abajo solo exigen un Bearer token válido
-# (get_current_user), igual que /change-password-institucional en auth.py. Ninguno
-# valida todavía un permiso de negocio fino (ej. "seguridad.roles.administrar") porque
-# hacerlo sería la gallina y el huevo: es justamente acá donde se otorgan los primeros
-# permisos, y hoy nadie tiene ninguno asignado (CLAUDE.md §5, "sin roles por defecto").
-# No exponer esta pantalla fuera de un ambiente controlado sin resolver antes con
-# negocio/arquitectura cómo se bootstrapea el primer administrador (CLAUDE.md §10).
+# Estos endpoints solo exigen login, todavía no un permiso fino (acá se
+# otorgan los primeros permisos). No exponer fuera de un ambiente controlado.
 router = APIRouter(tags=["Seguridad — Roles y Permisos"])
 
 
@@ -192,10 +187,8 @@ def actualizar_estado_usuario(
     use_case: SetUsuarioActivoUseCase = Depends(get_set_usuario_activo_use_case),
 ):
     """
-    Activa/desactiva un usuario (usuario.activo) en vez de borrarlo — CLAUDE.md §6 pide
-    soft delete para usuarios. Un usuario inactivo conserva su rol/área asignados (por si
-    se reactiva después) pero no puede volver a autenticarse (SyncUserRbacUseCase /
-    get_current_user rechazan el login/las requests mientras esté inactivo).
+    Activa/desactiva un usuario en vez de borrarlo. Un usuario inactivo conserva
+    su rol/área pero no puede volver a autenticarse.
     """
     resultado = use_case.execute(usuario_id, payload.activo, actor_id)
     return _usuario_to_out(resultado)

@@ -12,23 +12,15 @@ from app.domains.seguridad.infrastructure.models import (
     UsuarioRolAreaModel,
 )
 
-# Área + rol con los que arranca todo usuario nuevo autenticado por Keycloak: en vez de
-# quedar sin permisos hasta que un admin se lo asigne a mano (CLAUDE.md §5 original), todo
-# el que se loguea por primera vez entra por Catastro con el rol base "Inicio". Se
-# resuelven con get-or-create (mismo patrón que
-# SqlRbacAdminRepository._get_or_create_permiso) porque hoy no hay Alembic ni seed
-# separado del código (CLAUDE.md §6): si el área o el rol ya existen (creados a mano desde
-# RolesPage) se reusan tal cual, nunca se duplican por nombre.
+# Área + rol con los que arranca todo usuario nuevo: entra por Catastro con el
+# rol base "Inicio", en vez de quedar sin permisos. Se resuelven con get-or-create
+# para reusar el área/rol si ya existen, sin duplicarlos por nombre.
 AREA_INICIAL_NOMBRE = "Catastro"
 ROL_INICIAL_NOMBRE = "Inicio"
 
 
 class SqlUserRepository(UserRepositoryPort):
-    """
-    Adaptador de repositorio que implementa UserRepositoryPort usando SQLAlchemy contra
-    el esquema real de PostgreSQL (creado con SQL puro por el equipo de base de datos,
-    ver ecosistema_seguridad_backup.sql).
-    """
+    """Implementa UserRepositoryPort con SQLAlchemy contra el esquema real de PostgreSQL."""
 
     def __init__(self, db: Session):
         self._db = db

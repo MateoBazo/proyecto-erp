@@ -21,16 +21,13 @@ function ModuleTile({ label, path, icon: Icon }) {
 }
 
 /**
- * Home de la aplicación: saludo personalizado del usuario logueado y la grilla de módulos
- * del ERP. Al entrar a un módulo desde acá, el sidebar contextual aparece (ver
- * app/layout/Sidebar.jsx) — antes de eso el sidebar no se muestra.
+ * Pantalla de inicio con bienvenida y grilla de módulos disponibles.
  */
 export function DashboardPage() {
   const { user } = useAuth()
 
   const displayName = user?.username || 'Usuario'
-  // Solo los módulos que el rol interno asignado habilita (CLAUDE.md §5) — sin rol
-  // asignado, `user.permisos` viene vacío y no se muestra ningún módulo.
+  // Filtra los módulos según los permisos del usuario
   const modules = NAV_SECTIONS.filter(
     (section) => section.path !== '/dashboard' && puedeVerModulo(user?.permisos, section)
   )

@@ -22,12 +22,9 @@ from app.domains.seguridad.infrastructure.models import (
     UsuarioRolAreaModel,
 )
 
-# Nombres del sistema/subsistema donde viven los recursos que representan los módulos
-# del ERP (uno por módulo de negocio, ej. 'geoextraccion', 'seguridad'). El catálogo de
-# módulos en sí no lo define el backend: lo manda el frontend (derivado de NAV_SECTIONS,
-# ver Frontend/src/domains/seguridad/data/mockSeguridad.js) al asignar permisos a un rol;
-# acá solo se garantiza que cada módulo usado tenga su fila real en 'recurso'/'permiso'
-# (CLAUDE.md §4: nunca un permiso implícito sin fila en la tabla).
+# Sistema/subsistema donde viven los recursos que representan los módulos del ERP.
+# El catálogo de módulos lo manda el frontend al asignar permisos a un rol; acá
+# solo se garantiza que cada módulo usado tenga su fila real en 'recurso'/'permiso'.
 _SISTEMA_NOMBRE = "ERP Catastro"
 _SUBSISTEMA_NOMBRE = "Módulos ERP"
 
@@ -253,8 +250,7 @@ class SqlRbacAdminRepository(RbacAdminRepositoryPort):
         return subsistema
 
     def _audit(self, actor_usuario_id: Optional[str], accion: str, descripcion: str) -> None:
-        """Deja constancia en auditoria_acceso de una escritura administrativa RBAC
-        (CLAUDE.md §9: toda escritura de negocio queda auditada)."""
+        """Registra en auditoria_acceso una escritura administrativa RBAC."""
         self._db.add(
             AuditoriaAccesoModel(
                 usuario_id=actor_usuario_id,

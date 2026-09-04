@@ -7,8 +7,7 @@ import { isWideRoute } from '@/domains'
 import { Sidebar } from './Sidebar'
 
 /**
- * Shell de la aplicación autenticada: sidebar + header + contenido de la ruta activa.
- * Cualquier ruta protegida (dashboard, módulos del ERP) se monta dentro del <Outlet/>.
+ * Contenedor principal para rutas autenticadas (header, sidebar y contenido).
  */
 export function AppShell() {
   const { user, logout } = useAuth()
@@ -17,9 +16,7 @@ export function AppShell() {
   const isInsideModule = Boolean(getCurrentDomain(location.pathname))
 
   const [sidebarOpen, setSidebarOpen] = useState(isInsideModule)
-  // Al entrar o salir de un módulo, el sidebar vuelve a su estado por defecto: visible
-  // dentro del módulo, oculto en Inicio (ver "Adjusting state when a prop changes" de React,
-  // evita el patrón useEffect + setState que dispara un render en cascada).
+  // Sincroniza la visibilidad del sidebar según si se está dentro de un módulo
   const [syncedInsideModule, setSyncedInsideModule] = useState(isInsideModule)
   if (isInsideModule !== syncedInsideModule) {
     setSyncedInsideModule(isInsideModule)

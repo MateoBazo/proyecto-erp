@@ -1,11 +1,6 @@
 """
-Adaptador de infraestructura que implementa ShapefilePort con GeoPandas/Shapely.
-Es la única capa de este dominio que conoce estas librerías — domain/ y application/ no
-las importan, así que el día que este dominio se extraiga a servicio aparte, solo cambia
-este archivo (ver CLAUDE.md §3).
-
-Lógica trasladada de geo-extract/backend/main.py (export_shapefile/merge_shapefiles),
-misma proyección y mismos atributos generados.
+Implementa ShapefilePort con GeoPandas/Shapely. Única capa que conoce estas
+librerías; domain/ y application/ no las importan.
 """
 import io
 import os

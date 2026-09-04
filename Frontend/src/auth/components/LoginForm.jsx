@@ -79,7 +79,6 @@ export function LoginForm() {
         key={shakeKey}
         className={shakeKey ? 'flex flex-col gap-4 animate-field-shake' : 'flex flex-col gap-4'}
       >
-        {/* Campo Usuario */}
         <Input
           id="username"
           name="username"
@@ -94,7 +93,6 @@ export function LoginForm() {
           placeholder="Ej. operador o admin"
         />
 
-        {/* Campo Contraseña */}
         <Input
           id="password"
           name="password"
@@ -125,11 +123,9 @@ export function LoginForm() {
         />
       </div>
 
-      {/* Alertas de error o éxito */}
       {formError && <Alert type="error" message={formError} />}
       {successMessage && <Alert type="success" message={successMessage} />}
 
-      {/* Botón de Iniciar Sesión */}
       <Button
         type="submit"
         variant="primary"

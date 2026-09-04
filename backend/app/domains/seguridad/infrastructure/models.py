@@ -1,12 +1,10 @@
 """
-Modelos ORM que reflejan el esquema REAL de PostgreSQL, tal como lo crea el equipo de
-base de datos con SQL puro (ver ecosistema_seguridad_backup.sql en la raíz del repo).
-Este archivo no define el esquema — lo describe. Si el equipo de base de datos cambia
-una tabla, este archivo se actualiza para que coincida, no al revés.
+Modelos ORM que reflejan el esquema real de PostgreSQL (creado por el equipo de
+base de datos). Este archivo describe el esquema, no lo define: si la base cambia,
+se actualiza acá para que coincida.
 
-Jerarquía de permisos: sistema -> subsistema -> recurso -> permiso (accion sobre ese
-recurso). Un rol_interno se asigna a un usuario siempre junto con un área concreta
-(tabla usuario_rol_area) — no existe una asignación usuario<->rol sin área.
+Jerarquía de permisos: sistema -> subsistema -> recurso -> permiso. Un rol_interno
+siempre se asigna a un usuario junto con un área (tabla usuario_rol_area).
 """
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, text
 from sqlalchemy.dialects.postgresql import UUID
@@ -70,9 +68,8 @@ class RecursoModel(Base):
 
 
 class UsuarioModel(Base):
-    """`keycloak_sub` es el vínculo con JWT.sub (CLAUDE.md §5). Un usuario nuevo arranca
-    con una fila en usuario_rol_area — área "Catastro" + rol "Inicio" — asignada por
-    SqlUserRepository.ensure_user_exists, no elegida en base a nada de Keycloak."""
+    """`keycloak_sub` vincula con JWT.sub. Un usuario nuevo arranca con área
+    "Catastro" + rol "Inicio" en usuario_rol_area (ensure_user_exists)."""
     __tablename__ = "usuario"
 
     id = _uuid_pk()
@@ -97,8 +94,7 @@ class AreaModel(Base):
 
 
 class RolInternoModel(Base):
-    """Sin columna keycloak_id: un rol interno es un concepto separado de los roles de
-    Keycloak (CLAUDE.md §5 y §6) — nunca se crea "para reflejar" un rol de Keycloak."""
+    """Sin columna keycloak_id: es un concepto separado de los roles de Keycloak."""
     __tablename__ = "rol_interno"
 
     id = _uuid_pk()
@@ -113,9 +109,8 @@ class RolInternoModel(Base):
 
 
 class UsuarioRolAreaModel(Base):
-    """Asigna un rol_interno a un usuario dentro de un área concreta. El área es
-    obligatoria en la base real: no existe asignación usuario<->rol sin área (es el
-    "alcance" del que habla CLAUDE.md §5)."""
+    """Asigna un rol_interno a un usuario dentro de un área. El área es obligatoria:
+    no existe asignación usuario<->rol sin área."""
     __tablename__ = "usuario_rol_area"
 
     id = _uuid_pk()
@@ -130,10 +125,8 @@ class UsuarioRolAreaModel(Base):
 
 
 class PermisoModel(Base):
-    """Un permiso es una acción sobre un recurso concreto (recurso_id + accion), no un
-    nombre plano — aproxima el formato `dominio.recurso.accion` de CLAUDE.md §8, aunque
-    el nivel "dominio" (sistema/subsistema aquí) todavía no está confirmado 1:1 con los
-    dominios del ERP (Catastro, Seguridad...) — ver CLAUDE.md §10."""
+    """Un permiso es una acción sobre un recurso concreto (recurso_id + accion),
+    no un nombre plano."""
     __tablename__ = "permiso"
 
     id = _uuid_pk()

@@ -118,15 +118,9 @@ def get_current_user(
     user_repository: UserRepositoryPort = Depends(get_user_repository),
 ) -> UserProfile:
     """
-    Dependencia de FastAPI para proteger endpoints.
-    Extrae el token Bearer, lo valida contra Keycloak y retorna la entidad UserProfile.
-
-    También rechaza acá a un usuario marcado como inactivo (usuario.activo = false, ver
-    PermisosPage): como esta dependencia la usan todos los endpoints protegidos, alcanza
-    con este único chequeo para que una desactivación a mitad de sesión corte el acceso
-    en el siguiente request, no solo en el próximo /login. Si el 'sub' del token todavía
-    no tiene fila en 'usuario' (nunca hizo login por credenciales), se deja pasar — no hay
-    nada que bloquear todavía.
+    Dependencia de FastAPI para proteger endpoints: valida el token Bearer contra
+    Keycloak y devuelve el UserProfile. También rechaza acá a un usuario inactivo,
+    para que una desactivación a mitad de sesión corte el acceso de inmediato.
     """
     token = credentials.credentials
     profile = verify_use_case.execute(token)
@@ -147,10 +141,9 @@ def get_current_usuario_id(
     user_repository: UserRepositoryPort = Depends(get_user_repository),
 ) -> Optional[str]:
     """
-    Id interno (tabla 'usuario') del usuario autenticado, o None si todavía no tiene
-    fila propia (p. ej. nunca hizo login por credenciales, que es lo único que hoy
-    dispara SyncUserRbacUseCase — ver presentation/endpoints/auth.py). Se usa para dejar
-    constancia de quién hizo una escritura administrativa (CLAUDE.md §9).
+    Id interno (tabla 'usuario') del usuario autenticado, o None si todavía no
+    tiene fila propia. Se usa para dejar constancia de quién hizo una escritura
+    administrativa.
     """
     entity = user_repository.get_by_keycloak_sub(current_user.sub) if current_user.sub else None
     return entity.id_usuario if entity else None
@@ -217,15 +210,9 @@ def get_set_usuario_activo_use_case(
 
 def require_permission(codigo: str):
     """
-    Fábrica de dependencia de FastAPI: exige que el usuario autenticado tenga el permiso
-    'codigo' (formato 'recurso.accion', ej. 'geoextraccion.editar') entre los que le
-    otorgan sus roles asignados en usuario_rol_area. Uso: `Depends(require_permission("x.y"))`.
-
-    Esta es la primera vez que el backend resuelve una decisión de autorización real a
-    partir del modelo RBAC interno en vez del rol de Keycloak (CLAUDE.md §5). Se expone
-    también desde contracts/ (ver contracts/authorization.py) para que otros dominios
-    puedan protegerse con el mismo mecanismo sin importar nada de las capas internas de
-    seguridad — CLAUDE.md §2.
+    Fábrica de dependencia de FastAPI: exige que el usuario autenticado tenga el
+    permiso 'codigo' (formato 'recurso.accion') entre los que le dan sus roles.
+    Uso: `Depends(require_permission("x.y"))`.
     """
 
     def _dependency(

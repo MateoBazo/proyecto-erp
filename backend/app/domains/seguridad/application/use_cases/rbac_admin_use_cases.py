@@ -4,11 +4,8 @@ from app.domains.seguridad.domain.entities.rbac import AreaEntity, RoleEntity, U
 from app.domains.seguridad.domain.ports.rbac_admin_repository_port import RbacAdminRepositoryPort
 
 """
-Casos de uso de la pantalla de administración de roles/áreas/asignaciones que
-CLAUDE.md §10 marca como pendiente. Cada uno es una acción de negocio concreta, delgada
-sobre RbacAdminRepositoryPort — sin lógica propia más allá de delegar (la lógica de
-resolución del catálogo permiso/recurso vive en el adaptador, ver
-infrastructure/sql_rbac_admin_repository.py).
+Casos de uso de la pantalla de administración de roles/áreas/asignaciones.
+Cada uno delega directo en RbacAdminRepositoryPort, sin lógica propia.
 """
 
 
